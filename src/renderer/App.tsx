@@ -21,6 +21,7 @@ export default function App() {
   const [statusMessage, setStatusMessage] = useState('')
   const [isWatching, setIsWatching] = useState(false)
   const [lastWatchEvent, setLastWatchEvent] = useState<WatchEvent | null>(null)
+  const [updateInfo, setUpdateInfo] = useState<{ version: string; ready: boolean } | null>(null)
   const transcriptIdRef = useRef(0)
 
   // Show settings if not configured
@@ -132,6 +133,17 @@ export default function App() {
       setActiveTab('ai')
     })
     return cleanup
+  }, [])
+
+  // Auto-update listeners
+  useEffect(() => {
+    const c1 = (window.api as any).onUpdateAvailable((info: { version: string }) => {
+      setUpdateInfo({ version: info.version, ready: false })
+    })
+    const c2 = (window.api as any).onUpdateDownloaded((info: { version: string }) => {
+      setUpdateInfo({ version: info.version, ready: true })
+    })
+    return () => { c1(); c2() }
   }, [])
 
   // Load notes list
@@ -248,6 +260,8 @@ export default function App() {
       statusMessage={statusMessage}
       opacity={settings.overlayOpacity}
       isWatching={isWatching}
+      updateInfo={updateInfo}
+      onInstallUpdate={() => (window.api as any).installUpdate()}
     />
   )
 }

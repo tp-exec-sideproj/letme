@@ -4,6 +4,7 @@ import { createAnswerWindow } from './answer-window'
 import { createTray, destroyTray } from './tray'
 import { registerHotkeys, unregisterHotkeys } from './hotkeys'
 import { registerIPCHandlers } from './ipc-handlers'
+import { initAutoUpdater } from './updater'
 
 // Single instance lock
 const gotLock = app.requestSingleInstanceLock()
@@ -27,6 +28,7 @@ app.whenReady().then(() => {
   createAnswerWindow()
   createTray()
   registerHotkeys()
+  initAutoUpdater()
 })
 
 app.on('window-all-closed', () => {

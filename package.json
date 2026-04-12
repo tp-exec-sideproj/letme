@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "electron-store": "^8.2.0",
+    "electron-updater": "^6.8.3",
     "koffi": "^2.9.0",
     "microsoft-cognitiveservices-speech-sdk": "^1.40.0",
     "openai": "^6.34.0",

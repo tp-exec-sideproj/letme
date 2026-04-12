@@ -678,3 +678,32 @@ html, body, #root {
   background: rgba(255, 255, 255, 0.08);
   border-radius: 2px;
 }
+
+/* === Update banner === */
+.update-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(34, 197, 94, 0.12);
+  border-top: 1px solid rgba(34, 197, 94, 0.2);
+  font-size: 11px;
+  color: rgba(134, 239, 172, 0.9);
+  border-radius: 0 0 8px 8px;
+}
+
+.update-btn {
+  padding: 2px 8px;
+  background: rgba(34, 197, 94, 0.2);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  border-radius: 4px;
+  color: #86efac;
+  font-size: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.update-btn:hover {
+  background: rgba(34, 197, 94, 0.3);
+}

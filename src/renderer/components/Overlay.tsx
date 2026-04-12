@@ -34,6 +34,8 @@ interface OverlayProps {
   statusMessage: string
   opacity: number
   isWatching: boolean
+  updateInfo: { version: string; ready: boolean } | null
+  onInstallUpdate: () => void
 }
 
 export default function Overlay(props: OverlayProps) {
@@ -108,6 +110,19 @@ export default function Overlay(props: OverlayProps) {
 
         {props.statusMessage && (
           <div className="status-toast">{props.statusMessage}</div>
+        )}
+
+        {props.updateInfo && (
+          <div className="update-banner">
+            {props.updateInfo.ready ? (
+              <>
+                Update v{props.updateInfo.version} ready
+                <button className="update-btn" onClick={props.onInstallUpdate}>Restart</button>
+              </>
+            ) : (
+              <>Downloading update v{props.updateInfo.version}...</>
+            )}
+          </div>
         )}
       </div>
     </div>

@@ -114,5 +114,20 @@ contextBridge.exposeInMainWorld('api', {
     return () => ipcRenderer.removeListener('answer-update', handler)
   },
 
-  dismissAnswer: () => ipcRenderer.send('hide-answer')
+  dismissAnswer: () => ipcRenderer.send('hide-answer'),
+
+  // Auto-updater
+  onUpdateAvailable: (cb: (info: { version: string }) => void) => {
+    const handler = (_e: Electron.IpcRendererEvent, info: { version: string }) => cb(info)
+    ipcRenderer.on('update-available', handler)
+    return () => ipcRenderer.removeListener('update-available', handler)
+  },
+
+  onUpdateDownloaded: (cb: (info: { version: string }) => void) => {
+    const handler = (_e: Electron.IpcRendererEvent, info: { version: string }) => cb(info)
+    ipcRenderer.on('update-downloaded', handler)
+    return () => ipcRenderer.removeListener('update-downloaded', handler)
+  },
+
+  installUpdate: () => ipcRenderer.send('install-update')
 })
