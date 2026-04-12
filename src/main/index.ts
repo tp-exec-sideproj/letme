@@ -1,5 +1,6 @@
 import { app } from 'electron'
 import { createOverlayWindow } from './overlay-window'
+import { createAnswerWindow } from './answer-window'
 import { createTray, destroyTray } from './tray'
 import { registerHotkeys, unregisterHotkeys } from './hotkeys'
 import { registerIPCHandlers } from './ipc-handlers'
@@ -21,6 +22,7 @@ if (process.platform === 'darwin') {
 app.whenReady().then(() => {
   registerIPCHandlers()
   createOverlayWindow()
+  createAnswerWindow()
   createTray()
   registerHotkeys()
 })

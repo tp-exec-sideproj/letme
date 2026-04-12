@@ -1,5 +1,6 @@
 import { ipcMain, shell } from 'electron'
 import { getOverlayWindow } from './overlay-window'
+import { showAnswer, hideAnswerWindow } from './answer-window'
 import { startSpeechRecognizer, stopSpeechRecognizer } from './speech'
 import { askAI, askAIStream, analyzeScreenshot } from './ai-client'
 import { captureScreen } from './screenshot'
@@ -115,6 +116,16 @@ export function registerIPCHandlers(): void {
   ipcMain.handle('start-screen-watch', async () => {
     startScreenWatch((event: WatchEvent) => {
       sendToRenderer('screen-watch-event', event)
+
+      // Route quiz answers and interview talking points to the floating answer window
+      if (event.type === 'quiz-answered' && event.analysis) {
+        showAnswer(event.analysis, 'QUIZ')
+      } else if (event.type === 'analyzed' && event.analysis) {
+        const kb = getSettings().activeKnowledgeBase
+        if (kb === 'interview') {
+          showAnswer(event.analysis, 'INTERVIEW')
+        }
+      }
     })
   })
 
@@ -124,6 +135,10 @@ export function registerIPCHandlers(): void {
 
   ipcMain.handle('get-screen-watch-status', async () => {
     return isWatching()
+  })
+
+  ipcMain.on('hide-answer', () => {
+    hideAnswerWindow()
   })
 
   // Notes

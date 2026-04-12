@@ -103,5 +103,16 @@ contextBridge.exposeInMainWorld('api', {
     return () => {
       ipcRenderer.removeListener('ai-stream-error', handler)
     }
-  }
+  },
+
+  // Answer overlay (floating top-center window)
+  onAnswer: (cb: (payload: { text: string; category: string }) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, payload: { text: string; category: string }) => {
+      cb(payload)
+    }
+    ipcRenderer.on('answer-update', handler)
+    return () => ipcRenderer.removeListener('answer-update', handler)
+  },
+
+  dismissAnswer: () => ipcRenderer.send('hide-answer')
 })

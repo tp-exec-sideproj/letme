@@ -52,7 +52,14 @@ export default function App() {
   useEffect(() => {
     const cleanup = window.api.onScreenWatchEvent((event: WatchEvent) => {
       setLastWatchEvent(event)
-      if (event.type === 'analyzed' && event.analysis) {
+      if (event.type === 'quiz-answered' && event.analysis) {
+        // Quiz detected — surface answers immediately and prominently
+        setAiResponse(`[Quiz / Exam Detected]\n\n${event.analysis}`)
+        setActiveTab('ai')
+        setStatusMessage('Quiz detected — answers ready')
+        setTimeout(() => setStatusMessage(''), 5000)
+        refreshNotes()
+      } else if (event.type === 'analyzed' && event.analysis) {
         // Show a brief status toast for auto-detected content
         const label = event.category || 'Content'
         setStatusMessage(`Auto-noted: ${label}`)

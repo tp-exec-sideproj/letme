@@ -25,12 +25,13 @@ export interface ContentClassification {
 }
 
 export interface WatchEvent {
-  type: 'classified' | 'analyzed' | 'skipped' | 'error'
+  type: 'classified' | 'analyzed' | 'skipped' | 'error' | 'quiz-answered'
   category?: ContentCategory
   worthy?: boolean
   confidence?: number
   reason?: string
   analysis?: string
+  answer?: string
   error?: string
 }
 
@@ -53,7 +54,7 @@ Respond ONLY with valid JSON (no markdown, no code blocks, no extra text):
 {"worthy":true/false,"category":"CATEGORY","confidence":0-100,"reason":"one sentence"}
 
 Categories to use:
-- QUIZ: quiz, exam, test questions, multiple choice, fill-in-the-blank
+- QUIZ: quiz, exam, test questions, multiple choice, fill-in-the-blank, coding challenge, assessment
 - PRESENTATION: PowerPoint, Google Slides, Keynote, slide decks being presented
 - WHITEBOARD: whiteboard, drawing board, freehand diagrams or notes
 - DOCUMENT: important documents, reports, articles, specs being reviewed
@@ -67,6 +68,28 @@ Categories to use:
 
 TAKE NOTES (worthy: true) for: QUIZ, PRESENTATION, WHITEBOARD, DOCUMENT, CODE, GRAPH, FORM
 SKIP (worthy: false) for: DESKTOP, VIDEO, CHAT, OTHER`
+
+const QUIZ_ANSWER_SYSTEM_PROMPT = `You are an expert assistant helping answer quiz and exam questions in real time.
+
+The screenshot shows a quiz, exam, assessment, or test. Your job:
+1. Read ALL visible questions carefully
+2. For each question, provide the correct answer with a brief explanation
+3. For multiple choice questions, identify the correct option letter AND explain why
+4. For coding challenges, provide working code with comments
+5. For math or logic problems, show the solution steps
+6. Be accurate and direct — the user needs correct answers immediately
+
+Format your response as:
+Q1: [question text if visible]
+Answer: [correct answer]
+Reason: [brief explanation why this is correct]
+
+Q2: [question text if visible]
+Answer: [correct answer]
+Reason: [brief explanation]
+
+If the question has already been answered on screen, confirm if the answer shown is correct or provide the correct one.
+Do not hedge or add disclaimers — just answer correctly and concisely.`
 
 let watchInterval: ReturnType<typeof setInterval> | null = null
 let lastCaptureHash = ''
@@ -136,22 +159,39 @@ async function runCheck(): Promise<void> {
     }
     lastWorthyHash = hash
 
-    // Step 2: Full analysis of noteworthy content
-    const analysis = await analyzeScreenshot(imageBase64)
+    // Step 2: QUIZ gets automatic answer generation; everything else gets notes
+    if (classification.category === 'QUIZ') {
+      const answers = await answerQuiz(imageBase64)
 
-    // Add to transcript context and auto-save note
-    addToTranscript(`[Screen: ${classification.category}] ${analysis}`)
-    try {
-      saveNote(analysis, `Auto-Detected: ${classification.category}`)
-    } catch (err) {
-      console.error('[ScreenWatcher] Failed to save note:', err)
+      addToTranscript(`[Quiz Detected] ${answers}`)
+      try {
+        saveNote(answers, 'Quiz Answers')
+      } catch (err) {
+        console.error('[ScreenWatcher] Failed to save quiz note:', err)
+      }
+
+      sendEvent({
+        type: 'quiz-answered',
+        category: 'QUIZ',
+        analysis: answers
+      })
+    } else {
+      // Step 2b: Full analysis of noteworthy non-quiz content
+      const analysis = await analyzeScreenshot(imageBase64)
+
+      addToTranscript(`[Screen: ${classification.category}] ${analysis}`)
+      try {
+        saveNote(analysis, `Auto-Detected: ${classification.category}`)
+      } catch (err) {
+        console.error('[ScreenWatcher] Failed to save note:', err)
+      }
+
+      sendEvent({
+        type: 'analyzed',
+        category: classification.category,
+        analysis
+      })
     }
-
-    sendEvent({
-      type: 'analyzed',
-      category: classification.category,
-      analysis
-    })
   } catch (err: any) {
     // Silently handle missing API keys (expected when not configured)
     const msg: string = err?.message || String(err)
@@ -172,6 +212,14 @@ async function classifyContent(imageBase64: string): Promise<ContentClassificati
 
   const raw = await askAI(messages, imageBase64)
   return parseClassification(raw)
+}
+
+async function answerQuiz(imageBase64: string): Promise<string> {
+  const messages = [
+    { role: 'system' as const, content: QUIZ_ANSWER_SYSTEM_PROMPT },
+    { role: 'user' as const, content: 'Answer the questions in this screenshot:' }
+  ]
+  return askAI(messages, imageBase64)
 }
 
 function parseClassification(raw: string): ContentClassification {

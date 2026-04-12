@@ -32,9 +32,11 @@ export default function AIPanel({
     }
   }
 
+  const isQuizResponse = aiResponse.startsWith('[Quiz / Exam Detected]')
+
   return (
     <div className="ai-panel">
-      <div className="ai-response-area" ref={responseRef}>
+      <div className={`ai-response-area${isQuizResponse ? ' quiz-response' : ''}`} ref={responseRef}>
         {!aiResponse && !aiLoading ? (
           <div className="empty-state">
             <p>AI Assistant</p>
@@ -42,14 +44,19 @@ export default function AIPanel({
               Ask a question or press Ctrl+Enter to summarize the meeting
             </p>
             <p className="hint">
-              Ctrl+Shift+Enter to capture &amp; analyze screen
+              Ctrl+Shift+Enter to capture and analyze screen
             </p>
           </div>
         ) : (
-          <div className="ai-response-text">
-            {aiResponse}
-            {aiLoading && <span className="typing-cursor">▊</span>}
-          </div>
+          <>
+            {isQuizResponse && (
+              <div className="quiz-banner">Quiz / Exam — Auto Answers</div>
+            )}
+            <div className="ai-response-text">
+              {isQuizResponse ? aiResponse.replace('[Quiz / Exam Detected]\n\n', '') : aiResponse}
+              {aiLoading && <span className="typing-cursor">▊</span>}
+            </div>
+          </>
         )}
       </div>
 
@@ -73,7 +80,7 @@ export default function AIPanel({
             {aiLoading ? (
               <span className="spinner-small" />
             ) : (
-          '-> Ask'
+              '-> Ask'
             )}
           </button>
           <button

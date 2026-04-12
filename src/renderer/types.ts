@@ -33,7 +33,7 @@ export type ContentCategory =
   | 'CODE' | 'GRAPH' | 'FORM' | 'DESKTOP' | 'VIDEO' | 'CHAT' | 'OTHER'
 
 export interface WatchEvent {
-  type: 'classified' | 'analyzed' | 'skipped' | 'error'
+  type: 'classified' | 'analyzed' | 'skipped' | 'error' | 'quiz-answered'
   category?: ContentCategory
   worthy?: boolean
   confidence?: number

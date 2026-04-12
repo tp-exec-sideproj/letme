@@ -1,7 +1,26 @@
 import OpenAI, { AzureOpenAI } from 'openai'
 import { getSettings } from './store'
+import { searchWeb, formatSearchResults } from './web-search'
 
 type ChatMessage = OpenAI.Chat.ChatCompletionMessageParam
+
+const WEB_SEARCH_TOOL: OpenAI.Chat.ChatCompletionTool = {
+  type: 'function',
+  function: {
+    name: 'web_search',
+    description: 'Search the web for current, factual, or up-to-date information. Use this when you need to look up facts, recent events, specific details, or any information you are not certain about.',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: 'The search query — be specific and concise'
+        }
+      },
+      required: ['query']
+    }
+  }
+}
 
 function getClient(): OpenAI {
   const settings = getSettings()
@@ -9,7 +28,6 @@ function getClient(): OpenAI {
     throw new Error('AI credentials not configured. Please set them in Settings.')
   }
 
-  // Azure OpenAI endpoint — use AzureOpenAI client
   if (settings.aiEndpoint.includes('.openai.azure.com')) {
     return new AzureOpenAI({
       endpoint: settings.aiEndpoint,
@@ -19,7 +37,6 @@ function getClient(): OpenAI {
     })
   }
 
-  // Any other OpenAI-compatible endpoint
   return new OpenAI({
     apiKey: settings.aiKey,
     baseURL: settings.aiEndpoint,
@@ -53,22 +70,73 @@ function buildMessagesWithImage(
   })
 }
 
+/**
+ * Ask AI with optional web search tool calling.
+ * The AI will automatically call web_search if it needs current information.
+ */
 export async function askAI(
   messages: ChatMessage[],
-  imageBase64?: string
+  imageBase64?: string,
+  useWebSearch = true
 ): Promise<string> {
   const client = getClient()
   const finalMessages = imageBase64
     ? buildMessagesWithImage(messages, imageBase64)
     : messages
 
+  // First call — may include tool use
   const response = await client.chat.completions.create({
     model: getModel(),
     messages: finalMessages,
-    max_tokens: 2048
+    max_tokens: 2048,
+    ...(useWebSearch && !imageBase64 ? { tools: [WEB_SEARCH_TOOL], tool_choice: 'auto' } : {})
   })
 
-  return response.choices[0]?.message?.content || ''
+  const choice = response.choices[0]
+
+  // Handle tool call (web search)
+  if (choice?.finish_reason === 'tool_calls' && choice.message?.tool_calls?.length) {
+    const toolCall = choice.message.tool_calls[0]
+    if (toolCall.function.name === 'web_search') {
+      let query = ''
+      try {
+        const args = JSON.parse(toolCall.function.arguments)
+        query = args.query || ''
+      } catch { /* use empty query */ }
+
+      let searchContext = ''
+      if (query) {
+        try {
+          const results = await searchWeb(query)
+          searchContext = formatSearchResults(query, results)
+        } catch (err) {
+          searchContext = `Search failed for "${query}"`
+          console.error('[AI] Web search error:', err)
+        }
+      }
+
+      // Second call with search results
+      const followupMessages: ChatMessage[] = [
+        ...finalMessages,
+        { role: 'assistant' as const, content: null, tool_calls: choice.message.tool_calls } as any,
+        {
+          role: 'tool' as const,
+          tool_call_id: toolCall.id,
+          content: searchContext
+        }
+      ]
+
+      const followup = await client.chat.completions.create({
+        model: getModel(),
+        messages: followupMessages,
+        max_tokens: 2048
+      })
+
+      return followup.choices[0]?.message?.content || ''
+    }
+  }
+
+  return choice?.message?.content || ''
 }
 
 export async function askAIStream(
@@ -108,7 +176,7 @@ export async function analyzeScreenshot(imageBase64: string): Promise<string> {
       content: 'Analyze this screenshot from my current meeting:'
     }
   ]
-  return askAI(messages, imageBase64)
+  return askAI(messages, imageBase64, false)
 }
 
 export type { ChatMessage }

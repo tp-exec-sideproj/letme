@@ -364,6 +364,23 @@ html, body, #root {
 .ai-input-area {
   flex-shrink: 0;
 }
+
+.quiz-response {
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  border-radius: 6px;
+}
+
+.quiz-banner {
+  padding: 5px 10px;
+  background: rgba(251, 191, 36, 0.15);
+  border-bottom: 1px solid rgba(251, 191, 36, 0.25);
+  font-size: 11px;
+  font-weight: 600;
+  color: #fbbf24;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
 .ai-input {
   width: 100%;
   padding: 8px 10px;
