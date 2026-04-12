@@ -56,7 +56,7 @@ export function createOverlayWindow(): BrowserWindow {
   if (process.env.NODE_ENV === 'development') {
     win.loadURL('http://localhost:5173')
   } else {
-    win.loadFile(join(__dirname, '../../dist/index.html'))
+    win.loadFile(join(__dirname, '../renderer/index.html'))
   }
 
   overlayWindow = win

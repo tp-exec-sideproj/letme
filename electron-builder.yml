@@ -3,9 +3,9 @@ productName: System Audio Helper
 directories:
   output: dist
 files:
-  - dist-electron/**/*
-  - dist/**/*
+  - out/**/*
   - resources/**/*
+  - node_modules/**/*
 win:
   executableName: AudioHelper
   icon: resources/icon.png
