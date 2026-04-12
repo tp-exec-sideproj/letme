@@ -8,12 +8,12 @@ files:
   - node_modules/**/*
 win:
   executableName: AudioHelper
-  icon: resources/icon.png
+  icon: build/icon.ico
   target: nsis
 mac:
-  bundleIdentifier: com.system.audiohelper
+  appId: com.system.audiohelper
   category: public.app-category.utilities
-  icon: resources/icon.png
+  icon: build/icon.ico
   target: dmg
 nsis:
   oneClick: false

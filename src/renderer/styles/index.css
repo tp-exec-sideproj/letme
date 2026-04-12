@@ -153,7 +153,62 @@ html, body, #root {
 }
 
 .config-warning {
-  font-size: 14px;
+  font-size: 12px;
+  color: #f59e0b;
+  font-weight: bold;
+}
+
+/* === Knowledge Base Selector === */
+.kb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kb-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s;
+}
+
+.kb-item:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+.kb-item input[type="radio"] {
+  margin-top: 3px;
+  accent-color: #7c6af7;
+  flex-shrink: 0;
+}
+
+.kb-item input[type="radio"]:checked + .kb-info {
+  color: #fff;
+}
+
+.kb-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kb-name {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.kb-desc {
+  font-size: 11px;
+  opacity: 0.55;
+}
+
+.kb-item:has(input:checked) {
+  background: rgba(124,106,247,0.15);
+  border-color: rgba(124,106,247,0.4);
 }
 
 /* === Panel Content === */

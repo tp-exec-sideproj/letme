@@ -37,7 +37,7 @@ export default function AIPanel({
       <div className="ai-response-area" ref={responseRef}>
         {!aiResponse && !aiLoading ? (
           <div className="empty-state">
-            <p>✨ AI Assistant</p>
+            <p>AI Assistant</p>
             <p className="hint">
               Ask a question or press Ctrl+Enter to summarize the meeting
             </p>
@@ -73,7 +73,7 @@ export default function AIPanel({
             {aiLoading ? (
               <span className="spinner-small" />
             ) : (
-              '↗ Ask'
+          '-> Ask'
             )}
           </button>
           <button
@@ -82,7 +82,7 @@ export default function AIPanel({
             disabled={aiLoading}
             title="Capture Screen (Ctrl+Shift+Enter)"
           >
-            📸 Screen
+            Screen
           </button>
         </div>
       </div>

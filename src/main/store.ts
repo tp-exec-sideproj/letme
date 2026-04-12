@@ -14,6 +14,7 @@ export interface Settings {
   overlayOpacity: number
   autoSaveNotes: boolean
   screenWatchEnabled: boolean
+  activeKnowledgeBase: string
 }
 
 const defaults: Settings = {
@@ -29,7 +30,8 @@ const defaults: Settings = {
   hotkeyQuit: 'CommandOrControl+Shift+Escape',
   overlayOpacity: 0.88,
   autoSaveNotes: true,
-  screenWatchEnabled: false
+  screenWatchEnabled: false,
+  activeKnowledgeBase: 'general'
 }
 
 let store: Store<Settings> | null = null
@@ -60,7 +62,8 @@ export function getSettings(): Settings {
     hotkeyQuit: s.get('hotkeyQuit', defaults.hotkeyQuit),
     overlayOpacity: s.get('overlayOpacity', defaults.overlayOpacity),
     autoSaveNotes: s.get('autoSaveNotes', defaults.autoSaveNotes),
-    screenWatchEnabled: s.get('screenWatchEnabled', defaults.screenWatchEnabled)
+    screenWatchEnabled: s.get('screenWatchEnabled', defaults.screenWatchEnabled),
+    activeKnowledgeBase: s.get('activeKnowledgeBase', defaults.activeKnowledgeBase)
   }
 }
 

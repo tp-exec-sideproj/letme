@@ -8,6 +8,7 @@ import { getSettings, saveSettings } from './store'
 import { reregisterHotkeys } from './hotkeys'
 import { transcriptBuffer, addToTranscript } from './shared-state'
 import { startScreenWatch, stopScreenWatch, isWatching } from './screen-watcher'
+import { getKnowledgeBase, KNOWLEDGE_BASES } from './knowledge-base'
 import type { WatchEvent } from './screen-watcher'
 
 function sendToRenderer(channel: string, ...args: any[]): void {
@@ -37,49 +38,35 @@ export function registerIPCHandlers(): void {
 
   // AI
   ipcMain.handle('ask-ai', async (_event, prompt: string, imageBase64?: string) => {
+    const settings = getSettings()
+    const kb = getKnowledgeBase(settings.activeKnowledgeBase)
     const contextText = transcriptBuffer.length > 0
-      ? `Recent meeting transcript:\n${transcriptBuffer.join('\n')}\n\n`
+      ? `\nRecent meeting transcript:\n${transcriptBuffer.join('\n')}\n`
       : ''
 
     const messages = [
-      {
-        role: 'system' as const,
-        content: 'You are an AI meeting copilot. Help the user understand and participate in their meeting. Be concise and actionable. Reference the transcript context when relevant.'
-      },
-      {
-        role: 'user' as const,
-        content: contextText + prompt
-      }
+      { role: 'system' as const, content: kb.systemPrompt },
+      { role: 'user' as const, content: contextText + '\n' + prompt }
     ]
 
     const result = await askAI(messages, imageBase64)
 
-    const settings = getSettings()
     if (settings.autoSaveNotes) {
-      try {
-        saveNote(result, 'AI Insight')
-      } catch (err) {
-        console.error('[IPC] Failed to auto-save note:', err)
-      }
+      try { saveNote(result, 'AI Insight') } catch { /* ignore */ }
     }
-
     return result
   })
 
-  ipcMain.handle('ask-ai-stream', async (event, prompt: string) => {
+  ipcMain.handle('ask-ai-stream', async (_event, prompt: string) => {
+    const settings = getSettings()
+    const kb = getKnowledgeBase(settings.activeKnowledgeBase)
     const contextText = transcriptBuffer.length > 0
-      ? `Recent meeting transcript:\n${transcriptBuffer.join('\n')}\n\n`
+      ? `\nRecent meeting transcript:\n${transcriptBuffer.join('\n')}\n`
       : ''
 
     const messages = [
-      {
-        role: 'system' as const,
-        content: 'You are an AI meeting copilot. Help the user understand and participate in their meeting. Be concise and actionable.'
-      },
-      {
-        role: 'user' as const,
-        content: contextText + prompt
-      }
+      { role: 'system' as const, content: kb.systemPrompt },
+      { role: 'user' as const, content: contextText + '\n' + prompt }
     ]
 
     let fullResponse = ''
@@ -93,15 +80,9 @@ export function registerIPCHandlers(): void {
       throw err
     }
 
-    const settings = getSettings()
     if (settings.autoSaveNotes && fullResponse) {
-      try {
-        saveNote(fullResponse, 'AI Insight')
-      } catch (err) {
-        console.error('[IPC] Failed to auto-save note:', err)
-      }
+      try { saveNote(fullResponse, 'AI Insight') } catch { /* ignore */ }
     }
-
     return fullResponse
   })
 
@@ -119,6 +100,15 @@ export function registerIPCHandlers(): void {
 
     sendToRenderer('screen-analysis', analysis)
     return analysis
+  })
+
+  // Knowledge Base
+  ipcMain.handle('list-knowledge-bases', async () => {
+    return KNOWLEDGE_BASES.map(({ id, name, description }) => ({ id, name, description }))
+  })
+
+  ipcMain.handle('get-active-knowledge-base', async () => {
+    return getSettings().activeKnowledgeBase
   })
 
   // Screen Watch (continuous smart analysis)

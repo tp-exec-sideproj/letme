@@ -70,6 +70,10 @@ contextBridge.exposeInMainWorld('api', {
     }
   },
 
+  // Knowledge Base
+  listKnowledgeBases: () => ipcRenderer.invoke('list-knowledge-bases'),
+  getActiveKnowledgeBase: () => ipcRenderer.invoke('get-active-knowledge-base'),
+
   // Screen Watch
   startScreenWatch: () => ipcRenderer.invoke('start-screen-watch'),
   stopScreenWatch: () => ipcRenderer.invoke('stop-screen-watch'),

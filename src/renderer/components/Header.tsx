@@ -8,11 +8,11 @@ interface HeaderProps {
   isWatching: boolean
 }
 
-const tabs: Array<{ id: PanelTab; label: string; icon: string }> = [
-  { id: 'transcript', label: 'Transcript', icon: '🎙' },
-  { id: 'ai', label: 'AI', icon: '✨' },
-  { id: 'notes', label: 'Notes', icon: '📝' },
-  { id: 'settings', label: 'Settings', icon: '⚙️' }
+const tabs: Array<{ id: PanelTab; label: string }> = [
+  { id: 'transcript', label: 'Live' },
+  { id: 'ai', label: 'AI' },
+  { id: 'notes', label: 'Notes' },
+  { id: 'settings', label: 'Settings' }
 ]
 
 export default function Header({ activeTab, setActiveTab, isRecording, isConfigured, isWatching }: HeaderProps) {
@@ -23,14 +23,14 @@ export default function Header({ activeTab, setActiveTab, isRecording, isConfigu
         <div className="header-status">
           {isRecording && <span className="recording-dot" title="Recording" />}
           {isWatching && <span className="watch-dot" title="Screen watch active" />}
-          {!isConfigured && <span className="config-warning" title="API keys not configured">⚠️</span>}
+          {!isConfigured && <span className="config-warning" title="API not configured">!</span>}
         </div>
         <button
           className="close-btn"
           onClick={() => window.api.hideOverlay()}
           title="Hide (Ctrl+\)"
         >
-          ×
+          x
         </button>
       </div>
 
@@ -41,7 +41,6 @@ export default function Header({ activeTab, setActiveTab, isRecording, isConfigu
             className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
             onClick={() => setActiveTab(tab.id)}
           >
-            <span className="tab-icon">{tab.icon}</span>
             <span className="tab-label">{tab.label}</span>
           </button>
         ))}

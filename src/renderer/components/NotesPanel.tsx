@@ -33,13 +33,13 @@ export default function NotesPanel({
         />
         <div className="notes-actions">
           <button className="action-btn primary" onClick={onSaveNote}>
-            💾 Save Note
+            Save Note
           </button>
           <button className="action-btn" onClick={onOpenNotesFolder}>
-            📂 Open Folder
+            Open Folder
           </button>
           <button className="action-btn" onClick={onRefreshNotes}>
-            🔄
+            Refresh
           </button>
         </div>
       </div>
@@ -58,7 +58,7 @@ export default function NotesPanel({
                 className={`note-file-btn ${selectedNote === file ? 'active' : ''}`}
                 onClick={() => onLoadNote(file)}
               >
-                📄 {file.replace('.md', '')}
+                {file.replace('.md', '')}
               </button>
             ))}
           </div>

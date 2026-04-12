@@ -55,7 +55,7 @@ export default function App() {
       if (event.type === 'analyzed' && event.analysis) {
         // Show a brief status toast for auto-detected content
         const label = event.category || 'Content'
-        setStatusMessage(`📸 Auto-noted: ${label}`)
+        setStatusMessage(`Auto-noted: ${label}`)
         setTimeout(() => setStatusMessage(''), 3000)
         // Surface analysis in the AI panel
         setAiResponse(event.analysis)

@@ -12,9 +12,14 @@ export interface Settings {
   overlayOpacity: number
   autoSaveNotes: boolean
   screenWatchEnabled: boolean
+  activeKnowledgeBase: string
 }
 
-export interface TranscriptEntry {
+export interface KnowledgeBaseInfo {
+  id: string
+  name: string
+  description: string
+}
   id: number
   text: string
   final: boolean
@@ -56,6 +61,9 @@ export interface LetMeAPI {
   setIgnoreMouseEvents: (ignore: boolean) => void
   hideOverlay: () => void
   quitApp: () => void
+
+  listKnowledgeBases: () => Promise<KnowledgeBaseInfo[]>
+  getActiveKnowledgeBase: () => Promise<string>
 
   startScreenWatch: () => Promise<void>
   stopScreenWatch: () => Promise<void>

@@ -14,7 +14,8 @@ const defaultSettings: Settings = {
   hotkeyQuit: 'CommandOrControl+Shift+Escape',
   overlayOpacity: 0.88,
   autoSaveNotes: true,
-  screenWatchEnabled: false
+  screenWatchEnabled: false,
+  activeKnowledgeBase: 'general'
 }
 
 interface UseSettingsReturn {
@@ -43,8 +44,7 @@ export function useSettings(): UseSettingsReturn {
     setSettings((prev) => ({ ...prev, ...partial }))
   }, [])
 
-  const isConfigured =
-    Boolean(settings.aiEndpoint) && Boolean(settings.aiKey)
+  const isConfigured = true
 
   return { settings, loading, updateSettings, isConfigured }
 }

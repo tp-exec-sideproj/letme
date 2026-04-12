@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import type { Settings } from '../types'
+import { useState, useEffect } from 'react'
+import type { Settings, KnowledgeBaseInfo } from '../types'
 
 interface SettingsPanelProps {
   settings: Settings
@@ -9,11 +9,15 @@ interface SettingsPanelProps {
 
 export default function SettingsPanel({
   settings,
-  onUpdateSettings,
-  isConfigured
+  onUpdateSettings
 }: SettingsPanelProps) {
   const [saving, setSaving] = useState(false)
   const [local, setLocal] = useState<Settings>({ ...settings })
+  const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBaseInfo[]>([])
+
+  useEffect(() => {
+    window.api.listKnowledgeBases().then(setKnowledgeBases).catch(() => {})
+  }, [])
 
   const handleChange = (key: keyof Settings, value: string | number | boolean) => {
     setLocal((prev) => ({ ...prev, [key]: value }))
@@ -30,63 +34,28 @@ export default function SettingsPanel({
 
   return (
     <div className="settings-panel">
-      {!isConfigured && (
-        <div className="config-banner">
-          ⚠️ Please configure your API keys to enable AI features
+      <div className="settings-section">
+        <h4>Knowledge Base</h4>
+        <p style={{ fontSize: '11px', opacity: 0.6, marginBottom: '8px' }}>
+          Select the context that matches your current session for better AI responses.
+        </p>
+        <div className="kb-list">
+          {knowledgeBases.map((kb) => (
+            <label key={kb.id} className="kb-item">
+              <input
+                type="radio"
+                name="knowledgeBase"
+                value={kb.id}
+                checked={local.activeKnowledgeBase === kb.id}
+                onChange={() => handleChange('activeKnowledgeBase', kb.id)}
+              />
+              <div className="kb-info">
+                <span className="kb-name">{kb.name}</span>
+                <span className="kb-desc">{kb.description}</span>
+              </div>
+            </label>
+          ))}
         </div>
-      )}
-
-      <div className="settings-section">
-        <h4>AI Provider</h4>
-        <label className="setting-row">
-          <span>Endpoint</span>
-          <input
-            type="text"
-            value={local.aiEndpoint}
-            onChange={(e) => handleChange('aiEndpoint', e.target.value)}
-            placeholder="https://your-api-endpoint/v1"
-          />
-        </label>
-        <label className="setting-row">
-          <span>API Key</span>
-          <input
-            type="password"
-            value={local.aiKey}
-            onChange={(e) => handleChange('aiKey', e.target.value)}
-            placeholder="Your API key"
-          />
-        </label>
-        <label className="setting-row">
-          <span>Model</span>
-          <input
-            type="text"
-            value={local.aiModel}
-            onChange={(e) => handleChange('aiModel', e.target.value)}
-            placeholder="e.g. gpt-4o, claude-3-5-sonnet"
-          />
-        </label>
-      </div>
-
-      <div className="settings-section">
-        <h4>Azure Speech</h4>
-        <label className="setting-row">
-          <span>Speech Key</span>
-          <input
-            type="password"
-            value={local.azureSpeechKey}
-            onChange={(e) => handleChange('azureSpeechKey', e.target.value)}
-            placeholder="Your Azure Speech key"
-          />
-        </label>
-        <label className="setting-row">
-          <span>Region</span>
-          <input
-            type="text"
-            value={local.azureSpeechRegion}
-            onChange={(e) => handleChange('azureSpeechRegion', e.target.value)}
-            placeholder="eastus"
-          />
-        </label>
       </div>
 
       <div className="settings-section">
@@ -120,7 +89,7 @@ export default function SettingsPanel({
           <span>
             Continuous screen watch
             <small style={{ display: 'block', opacity: 0.6, fontSize: '11px', marginTop: '2px' }}>
-              Auto-detect &amp; note quizzes, slides, graphs, code every 10s
+              Auto-detect and note quizzes, slides, graphs, code every 10s
             </small>
           </span>
         </label>
@@ -157,7 +126,7 @@ export default function SettingsPanel({
         onClick={handleSave}
         disabled={saving}
       >
-        {saving ? 'Saving...' : '💾 Save Settings'}
+        {saving ? 'Saving...' : 'Save Settings'}
       </button>
     </div>
   )
