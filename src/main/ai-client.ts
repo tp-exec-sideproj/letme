@@ -1,4 +1,4 @@
-import OpenAI from 'openai'
+import OpenAI, { AzureOpenAI } from 'openai'
 import { getSettings } from './store'
 
 type ChatMessage = OpenAI.Chat.ChatCompletionMessageParam
@@ -8,6 +8,18 @@ function getClient(): OpenAI {
   if (!settings.aiEndpoint || !settings.aiKey) {
     throw new Error('AI credentials not configured. Please set them in Settings.')
   }
+
+  // Azure OpenAI endpoint — use AzureOpenAI client
+  if (settings.aiEndpoint.includes('.openai.azure.com')) {
+    return new AzureOpenAI({
+      endpoint: settings.aiEndpoint,
+      apiKey: settings.aiKey,
+      apiVersion: '2024-08-01-preview',
+      deployment: settings.aiModel || 'gpt-4o'
+    })
+  }
+
+  // Any other OpenAI-compatible endpoint
   return new OpenAI({
     apiKey: settings.aiKey,
     baseURL: settings.aiEndpoint,
