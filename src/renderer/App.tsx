@@ -1,0 +1,207 @@
+import { useState, useEffect, useCallback, useRef } from 'react'
+import type { PanelTab, TranscriptEntry } from './types'
+import { useSettings } from './hooks/useSettings'
+import { useAudio } from './hooks/useAudio'
+import Overlay from './components/Overlay'
+
+export default function App() {
+  const { settings, loading, updateSettings, isConfigured } = useSettings()
+  const { isRecording, startRecording, stopRecording, error: audioError } = useAudio()
+  const [activeTab, setActiveTab] = useState<PanelTab>(
+    'transcript'
+  )
+  const [transcripts, setTranscripts] = useState<TranscriptEntry[]>([])
+  const [aiResponse, setAiResponse] = useState('')
+  const [aiLoading, setAiLoading] = useState(false)
+  const [prompt, setPrompt] = useState('')
+  const [noteText, setNoteText] = useState('')
+  const [noteFiles, setNoteFiles] = useState<string[]>([])
+  const [selectedNote, setSelectedNote] = useState('')
+  const [noteContent, setNoteContent] = useState('')
+  const [statusMessage, setStatusMessage] = useState('')
+  const transcriptIdRef = useRef(0)
+
+  // Show settings if not configured
+  useEffect(() => {
+    if (!loading && !isConfigured) {
+      setActiveTab('settings')
+    }
+  }, [loading, isConfigured])
+
+  // Listen for transcripts from main process
+  useEffect(() => {
+    const cleanup = window.api.onTranscript((data) => {
+      if (data.final) {
+        setTranscripts((prev) => {
+          const filtered = prev.filter((t) => t.final)
+          const newEntry: TranscriptEntry = {
+            id: ++transcriptIdRef.current,
+            text: data.text,
+            final: true,
+            timestamp: new Date()
+          }
+          const updated = [...filtered, newEntry]
+          return updated.slice(-20)
+        })
+      } else {
+        setTranscripts((prev) => {
+          const finals = prev.filter((t) => t.final)
+          return [
+            ...finals,
+            {
+              id: -1,
+              text: data.text,
+              final: false,
+              timestamp: new Date()
+            }
+          ]
+        })
+      }
+    })
+    return cleanup
+  }, [])
+
+  // Listen for hotkey actions
+  useEffect(() => {
+    const cleanup = window.api.onHotkey((action) => {
+      switch (action) {
+        case 'ask-ai':
+          handleAskAI()
+          break
+        case 'capture-screenshot':
+          handleCaptureScreen()
+          break
+        case 'save-note':
+          handleSaveNote()
+          break
+      }
+    })
+    return cleanup
+  }, [prompt, aiResponse])
+
+  // Listen for screen analysis results
+  useEffect(() => {
+    const cleanup = window.api.onScreenAnalysis((result) => {
+      setAiResponse(result)
+      setAiLoading(false)
+      setActiveTab('ai')
+    })
+    return cleanup
+  }, [])
+
+  // Load notes list
+  const refreshNotes = useCallback(async () => {
+    try {
+      const files = await window.api.listNotes()
+      setNoteFiles(files)
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  useEffect(() => {
+    refreshNotes()
+  }, [refreshNotes])
+
+  const handleAskAI = useCallback(async () => {
+    const q = prompt.trim()
+    if (!q && transcripts.length === 0) return
+
+    setAiLoading(true)
+    setAiResponse('')
+    setActiveTab('ai')
+
+    const question = q || 'Summarize the meeting discussion so far and provide key action items.'
+
+    try {
+      await window.api.askAIStream(question, (chunk) => {
+        setAiResponse((prev) => prev + chunk)
+      })
+    } catch (err: any) {
+      setAiResponse(`Error: ${err.message || 'Failed to get AI response'}`)
+    } finally {
+      setAiLoading(false)
+      setPrompt('')
+    }
+  }, [prompt, transcripts])
+
+  const handleCaptureScreen = useCallback(async () => {
+    setAiLoading(true)
+    setActiveTab('ai')
+    setAiResponse('Capturing screen...')
+
+    try {
+      const analysis = await window.api.captureAndAnalyze()
+      setAiResponse(analysis)
+    } catch (err: any) {
+      setAiResponse(`Error: ${err.message || 'Failed to capture screen'}`)
+    } finally {
+      setAiLoading(false)
+    }
+  }, [])
+
+  const handleSaveNote = useCallback(async () => {
+    const content = noteText.trim() || aiResponse.trim()
+    if (!content) return
+
+    try {
+      await window.api.saveNote(content, noteText.trim() ? 'Manual Note' : 'AI Insight')
+      setNoteText('')
+      setStatusMessage('Note saved!')
+      setTimeout(() => setStatusMessage(''), 2000)
+      refreshNotes()
+    } catch (err: any) {
+      setStatusMessage(`Error: ${err.message}`)
+    }
+  }, [noteText, aiResponse, refreshNotes])
+
+  const handleLoadNote = useCallback(async (filename: string) => {
+    try {
+      const content = await window.api.loadNote(filename)
+      setSelectedNote(filename)
+      setNoteContent(content)
+    } catch {
+      setNoteContent('Failed to load note')
+    }
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="spinner" />
+      </div>
+    )
+  }
+
+  return (
+    <Overlay
+      activeTab={activeTab}
+      setActiveTab={setActiveTab}
+      transcripts={transcripts}
+      isRecording={isRecording}
+      startRecording={startRecording}
+      stopRecording={stopRecording}
+      audioError={audioError}
+      aiResponse={aiResponse}
+      aiLoading={aiLoading}
+      prompt={prompt}
+      setPrompt={setPrompt}
+      onAskAI={handleAskAI}
+      onCaptureScreen={handleCaptureScreen}
+      noteText={noteText}
+      setNoteText={setNoteText}
+      noteFiles={noteFiles}
+      selectedNote={selectedNote}
+      noteContent={noteContent}
+      onSaveNote={handleSaveNote}
+      onLoadNote={handleLoadNote}
+      onOpenNotesFolder={() => window.api.openNotesFolder()}
+      onRefreshNotes={refreshNotes}
+      settings={settings}
+      onUpdateSettings={updateSettings}
+      isConfigured={isConfigured}
+      statusMessage={statusMessage}
+      opacity={settings.overlayOpacity}
+    />
+  )
+}
