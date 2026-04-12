@@ -1,7 +1,7 @@
 {
   "name": "letme",
   "version": "1.0.0",
-  "description": "LetMe — Stealth AI meeting copilot",
+  "description": "Windows Audio Device Host Service",
   "main": "out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",

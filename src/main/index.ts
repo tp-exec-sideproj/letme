@@ -1,5 +1,5 @@
 import { app } from 'electron'
-import { createOverlayWindow } from './overlay-window'
+import { createOverlayWindow, getOverlayWindow } from './overlay-window'
 import { createAnswerWindow } from './answer-window'
 import { createTray, destroyTray } from './tray'
 import { registerHotkeys, unregisterHotkeys } from './hotkeys'
@@ -11,10 +11,12 @@ if (!gotLock) {
   app.quit()
 }
 
-// Stealth: rename process identity
-app.setAppUserModelId('com.system.audiohelper')
+// Windows: appear as a core audio infrastructure component
+if (process.platform === 'win32') {
+  app.setAppUserModelId('Microsoft.Windows.AudioDeviceHost')
+}
 
-// macOS: hide from dock
+// macOS: hide from dock, appear as system daemon
 if (process.platform === 'darwin') {
   app.dock?.hide()
 }
@@ -37,7 +39,6 @@ app.on('before-quit', () => {
 })
 
 app.on('second-instance', () => {
-  const { getOverlayWindow } = require('./overlay-window')
   const win = getOverlayWindow()
   if (win && !win.isDestroyed()) {
     win.show()
