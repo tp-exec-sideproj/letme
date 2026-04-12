@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import type { PanelTab, TranscriptEntry } from './types'
+import type { PanelTab, TranscriptEntry, WatchEvent } from './types'
 import { useSettings } from './hooks/useSettings'
 import { useAudio } from './hooks/useAudio'
 import Overlay from './components/Overlay'
@@ -19,6 +19,8 @@ export default function App() {
   const [selectedNote, setSelectedNote] = useState('')
   const [noteContent, setNoteContent] = useState('')
   const [statusMessage, setStatusMessage] = useState('')
+  const [isWatching, setIsWatching] = useState(false)
+  const [lastWatchEvent, setLastWatchEvent] = useState<WatchEvent | null>(null)
   const transcriptIdRef = useRef(0)
 
   // Show settings if not configured
@@ -27,6 +29,42 @@ export default function App() {
       setActiveTab('settings')
     }
   }, [loading, isConfigured])
+
+  // Start/stop screen watch based on settings
+  useEffect(() => {
+    if (loading) return
+    const toggle = async () => {
+      if (settings.screenWatchEnabled && isConfigured) {
+        await window.api.startScreenWatch()
+        setIsWatching(true)
+      } else {
+        await window.api.stopScreenWatch()
+        setIsWatching(false)
+      }
+    }
+    toggle()
+    return () => {
+      window.api.stopScreenWatch()
+    }
+  }, [settings.screenWatchEnabled, isConfigured, loading])
+
+  // Listen for screen watch events
+  useEffect(() => {
+    const cleanup = window.api.onScreenWatchEvent((event: WatchEvent) => {
+      setLastWatchEvent(event)
+      if (event.type === 'analyzed' && event.analysis) {
+        // Show a brief status toast for auto-detected content
+        const label = event.category || 'Content'
+        setStatusMessage(`📸 Auto-noted: ${label}`)
+        setTimeout(() => setStatusMessage(''), 3000)
+        // Surface analysis in the AI panel
+        setAiResponse(event.analysis)
+        setActiveTab('ai')
+        refreshNotes()
+      }
+    })
+    return cleanup
+  }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
   // Listen for transcripts from main process
   useEffect(() => {
@@ -202,6 +240,7 @@ export default function App() {
       isConfigured={isConfigured}
       statusMessage={statusMessage}
       opacity={settings.overlayOpacity}
+      isWatching={isWatching}
     />
   )
 }

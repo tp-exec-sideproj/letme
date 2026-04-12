@@ -1,14 +1,14 @@
 import { ipcMain, shell } from 'electron'
 import { getOverlayWindow } from './overlay-window'
 import { startSpeechRecognizer, stopSpeechRecognizer } from './speech'
-import { askClaude, askClaudeStream, analyzeScreenshot } from './ai-client'
+import { askAI, askAIStream, analyzeScreenshot } from './ai-client'
 import { captureScreen } from './screenshot'
 import { saveNote, listNotes, loadNote, getNotesDir } from './notes'
 import { getSettings, saveSettings } from './store'
 import { reregisterHotkeys } from './hotkeys'
-
-const MAX_TRANSCRIPT_ITEMS = 20
-const transcriptBuffer: string[] = []
+import { transcriptBuffer, addToTranscript } from './shared-state'
+import { startScreenWatch, stopScreenWatch, isWatching } from './screen-watcher'
+import type { WatchEvent } from './screen-watcher'
 
 function sendToRenderer(channel: string, ...args: any[]): void {
   const win = getOverlayWindow()
@@ -22,10 +22,7 @@ export function registerIPCHandlers(): void {
   ipcMain.handle('start-speech', async () => {
     const success = startSpeechRecognizer((text: string, isFinal: boolean) => {
       if (isFinal && text.trim()) {
-        transcriptBuffer.push(text.trim())
-        if (transcriptBuffer.length > MAX_TRANSCRIPT_ITEMS) {
-          transcriptBuffer.shift()
-        }
+        addToTranscript(text.trim())
       }
       sendToRenderer('transcript-update', { text, final: isFinal })
     })
@@ -55,7 +52,7 @@ export function registerIPCHandlers(): void {
       }
     ]
 
-    const result = await askClaude(messages, imageBase64)
+    const result = await askAI(messages, imageBase64)
 
     const settings = getSettings()
     if (settings.autoSaveNotes) {
@@ -87,7 +84,7 @@ export function registerIPCHandlers(): void {
 
     let fullResponse = ''
     try {
-      fullResponse = await askClaudeStream(messages, (chunk: string) => {
+      fullResponse = await askAIStream(messages, (chunk: string) => {
         sendToRenderer('ai-stream-chunk', chunk)
       })
       sendToRenderer('ai-stream-done', fullResponse)
@@ -112,10 +109,7 @@ export function registerIPCHandlers(): void {
     const imageBase64 = await captureScreen()
     const analysis = await analyzeScreenshot(imageBase64)
 
-    transcriptBuffer.push(`[Screen Analysis] ${analysis}`)
-    if (transcriptBuffer.length > MAX_TRANSCRIPT_ITEMS) {
-      transcriptBuffer.shift()
-    }
+    addToTranscript(`[Screen Analysis] ${analysis}`)
 
     try {
       saveNote(analysis, 'Screen Analysis')
@@ -125,6 +119,21 @@ export function registerIPCHandlers(): void {
 
     sendToRenderer('screen-analysis', analysis)
     return analysis
+  })
+
+  // Screen Watch (continuous smart analysis)
+  ipcMain.handle('start-screen-watch', async () => {
+    startScreenWatch((event: WatchEvent) => {
+      sendToRenderer('screen-watch-event', event)
+    })
+  })
+
+  ipcMain.handle('stop-screen-watch', async () => {
+    stopScreenWatch()
+  })
+
+  ipcMain.handle('get-screen-watch-status', async () => {
+    return isWatching()
   })
 
   // Notes

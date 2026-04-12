@@ -1,9 +1,9 @@
 import Store from 'electron-store'
 
 export interface Settings {
-  azureAiEndpoint: string
-  azureAiKey: string
-  azureAiModel: string
+  aiEndpoint: string
+  aiKey: string
+  aiModel: string
   azureSpeechKey: string
   azureSpeechRegion: string
   hotkeyToggle: string
@@ -13,12 +13,13 @@ export interface Settings {
   hotkeyQuit: string
   overlayOpacity: number
   autoSaveNotes: boolean
+  screenWatchEnabled: boolean
 }
 
 const defaults: Settings = {
-  azureAiEndpoint: process.env.AZURE_AI_ENDPOINT || '',
-  azureAiKey: process.env.AZURE_AI_KEY || '',
-  azureAiModel: process.env.AZURE_AI_MODEL || 'claude-sonnet-4-5',
+  aiEndpoint: process.env.AI_ENDPOINT || '',
+  aiKey: process.env.AI_KEY || '',
+  aiModel: process.env.AI_MODEL || '',
   azureSpeechKey: process.env.AZURE_SPEECH_KEY || '',
   azureSpeechRegion: process.env.AZURE_SPEECH_REGION || 'eastus',
   hotkeyToggle: 'CommandOrControl+\\',
@@ -27,7 +28,8 @@ const defaults: Settings = {
   hotkeySaveNote: 'CommandOrControl+Shift+N',
   hotkeyQuit: 'CommandOrControl+Shift+Escape',
   overlayOpacity: 0.88,
-  autoSaveNotes: true
+  autoSaveNotes: true,
+  screenWatchEnabled: false
 }
 
 let store: Store<Settings> | null = null
@@ -46,9 +48,9 @@ function getStore(): Store<Settings> {
 export function getSettings(): Settings {
   const s = getStore()
   return {
-    azureAiEndpoint: s.get('azureAiEndpoint', defaults.azureAiEndpoint),
-    azureAiKey: s.get('azureAiKey', defaults.azureAiKey),
-    azureAiModel: s.get('azureAiModel', defaults.azureAiModel),
+    aiEndpoint: s.get('aiEndpoint', defaults.aiEndpoint),
+    aiKey: s.get('aiKey', defaults.aiKey),
+    aiModel: s.get('aiModel', defaults.aiModel),
     azureSpeechKey: s.get('azureSpeechKey', defaults.azureSpeechKey),
     azureSpeechRegion: s.get('azureSpeechRegion', defaults.azureSpeechRegion),
     hotkeyToggle: s.get('hotkeyToggle', defaults.hotkeyToggle),
@@ -57,7 +59,8 @@ export function getSettings(): Settings {
     hotkeySaveNote: s.get('hotkeySaveNote', defaults.hotkeySaveNote),
     hotkeyQuit: s.get('hotkeyQuit', defaults.hotkeyQuit),
     overlayOpacity: s.get('overlayOpacity', defaults.overlayOpacity),
-    autoSaveNotes: s.get('autoSaveNotes', defaults.autoSaveNotes)
+    autoSaveNotes: s.get('autoSaveNotes', defaults.autoSaveNotes),
+    screenWatchEnabled: s.get('screenWatchEnabled', defaults.screenWatchEnabled)
   }
 }
 

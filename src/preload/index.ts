@@ -70,6 +70,17 @@ contextBridge.exposeInMainWorld('api', {
     }
   },
 
+  // Screen Watch
+  startScreenWatch: () => ipcRenderer.invoke('start-screen-watch'),
+  stopScreenWatch: () => ipcRenderer.invoke('stop-screen-watch'),
+  getScreenWatchStatus: () => ipcRenderer.invoke('get-screen-watch-status'),
+
+  onScreenWatchEvent: (cb: (event: any) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, data: any) => cb(data)
+    ipcRenderer.on('screen-watch-event', handler)
+    return () => ipcRenderer.removeListener('screen-watch-event', handler)
+  },
+
   onAIStreamDone: (cb: (fullText: string) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, fullText: string) => {
       cb(fullText)

@@ -37,32 +37,32 @@ export default function SettingsPanel({
       )}
 
       <div className="settings-section">
-        <h4>Azure AI Foundry</h4>
+        <h4>AI Provider</h4>
         <label className="setting-row">
           <span>Endpoint</span>
           <input
             type="text"
-            value={local.azureAiEndpoint}
-            onChange={(e) => handleChange('azureAiEndpoint', e.target.value)}
-            placeholder="https://your-resource.services.ai.azure.com/models"
+            value={local.aiEndpoint}
+            onChange={(e) => handleChange('aiEndpoint', e.target.value)}
+            placeholder="https://your-api-endpoint/v1"
           />
         </label>
         <label className="setting-row">
           <span>API Key</span>
           <input
             type="password"
-            value={local.azureAiKey}
-            onChange={(e) => handleChange('azureAiKey', e.target.value)}
-            placeholder="Your Azure AI key"
+            value={local.aiKey}
+            onChange={(e) => handleChange('aiKey', e.target.value)}
+            placeholder="Your API key"
           />
         </label>
         <label className="setting-row">
           <span>Model</span>
           <input
             type="text"
-            value={local.azureAiModel}
-            onChange={(e) => handleChange('azureAiModel', e.target.value)}
-            placeholder="claude-sonnet-4-5"
+            value={local.aiModel}
+            onChange={(e) => handleChange('aiModel', e.target.value)}
+            placeholder="e.g. gpt-4o, claude-3-5-sonnet"
           />
         </label>
       </div>
@@ -110,6 +110,19 @@ export default function SettingsPanel({
             onChange={(e) => handleChange('autoSaveNotes', e.target.checked)}
           />
           <span>Auto-save AI responses as notes</span>
+        </label>
+        <label className="setting-row checkbox">
+          <input
+            type="checkbox"
+            checked={local.screenWatchEnabled}
+            onChange={(e) => handleChange('screenWatchEnabled', e.target.checked)}
+          />
+          <span>
+            Continuous screen watch
+            <small style={{ display: 'block', opacity: 0.6, fontSize: '11px', marginTop: '2px' }}>
+              Auto-detect &amp; note quizzes, slides, graphs, code every 10s
+            </small>
+          </span>
         </label>
       </div>
 

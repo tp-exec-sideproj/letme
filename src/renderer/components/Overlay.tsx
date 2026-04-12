@@ -33,6 +33,7 @@ interface OverlayProps {
   isConfigured: boolean
   statusMessage: string
   opacity: number
+  isWatching: boolean
 }
 
 export default function Overlay(props: OverlayProps) {
@@ -57,6 +58,7 @@ export default function Overlay(props: OverlayProps) {
           setActiveTab={props.setActiveTab}
           isRecording={props.isRecording}
           isConfigured={props.isConfigured}
+          isWatching={props.isWatching}
         />
 
         <div className="panel-content">

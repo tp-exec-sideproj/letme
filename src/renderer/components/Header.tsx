@@ -5,6 +5,7 @@ interface HeaderProps {
   setActiveTab: (tab: PanelTab) => void
   isRecording: boolean
   isConfigured: boolean
+  isWatching: boolean
 }
 
 const tabs: Array<{ id: PanelTab; label: string; icon: string }> = [
@@ -14,13 +15,14 @@ const tabs: Array<{ id: PanelTab; label: string; icon: string }> = [
   { id: 'settings', label: 'Settings', icon: '⚙️' }
 ]
 
-export default function Header({ activeTab, setActiveTab, isRecording, isConfigured }: HeaderProps) {
+export default function Header({ activeTab, setActiveTab, isRecording, isConfigured, isWatching }: HeaderProps) {
   return (
     <div className="header">
       <div className="drag-handle">
         <div className="drag-grip" />
         <div className="header-status">
-          {isRecording && <span className="recording-dot" />}
+          {isRecording && <span className="recording-dot" title="Recording" />}
+          {isWatching && <span className="watch-dot" title="Screen watch active" />}
           {!isConfigured && <span className="config-warning" title="API keys not configured">⚠️</span>}
         </div>
         <button

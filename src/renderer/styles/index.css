@@ -136,6 +136,17 @@ html, body, #root {
   background: #ef4444;
   animation: pulse 1.5s infinite;
 }
+
+.watch-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #7c6af7;
+  animation: pulse 2s infinite;
+  margin-left: 4px;
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }

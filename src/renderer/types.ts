@@ -1,7 +1,7 @@
 export interface Settings {
-  azureAiEndpoint: string
-  azureAiKey: string
-  azureAiModel: string
+  aiEndpoint: string
+  aiKey: string
+  aiModel: string
   azureSpeechKey: string
   azureSpeechRegion: string
   hotkeyToggle: string
@@ -11,6 +11,7 @@ export interface Settings {
   hotkeyQuit: string
   overlayOpacity: number
   autoSaveNotes: boolean
+  screenWatchEnabled: boolean
 }
 
 export interface TranscriptEntry {
@@ -21,6 +22,20 @@ export interface TranscriptEntry {
 }
 
 export type PanelTab = 'transcript' | 'ai' | 'notes' | 'settings'
+
+export type ContentCategory =
+  | 'QUIZ' | 'PRESENTATION' | 'WHITEBOARD' | 'DOCUMENT'
+  | 'CODE' | 'GRAPH' | 'FORM' | 'DESKTOP' | 'VIDEO' | 'CHAT' | 'OTHER'
+
+export interface WatchEvent {
+  type: 'classified' | 'analyzed' | 'skipped' | 'error'
+  category?: ContentCategory
+  worthy?: boolean
+  confidence?: number
+  reason?: string
+  analysis?: string
+  error?: string
+}
 
 export interface PhantomAPI {
   startSpeech: () => Promise<void>
@@ -41,6 +56,11 @@ export interface PhantomAPI {
   setIgnoreMouseEvents: (ignore: boolean) => void
   hideOverlay: () => void
   quitApp: () => void
+
+  startScreenWatch: () => Promise<void>
+  stopScreenWatch: () => Promise<void>
+  getScreenWatchStatus: () => Promise<boolean>
+  onScreenWatchEvent: (cb: (event: WatchEvent) => void) => () => void
 
   onTranscript: (cb: (data: { text: string; final: boolean }) => void) => () => void
   onHotkey: (cb: (action: string) => void) => () => void

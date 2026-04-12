@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from 'react'
 import type { Settings } from '../types'
 
 const defaultSettings: Settings = {
-  azureAiEndpoint: '',
-  azureAiKey: '',
-  azureAiModel: 'claude-sonnet-4-5',
+  aiEndpoint: '',
+  aiKey: '',
+  aiModel: '',
   azureSpeechKey: '',
   azureSpeechRegion: 'eastus',
   hotkeyToggle: 'CommandOrControl+\\',
@@ -13,7 +13,8 @@ const defaultSettings: Settings = {
   hotkeySaveNote: 'CommandOrControl+Shift+N',
   hotkeyQuit: 'CommandOrControl+Shift+Escape',
   overlayOpacity: 0.88,
-  autoSaveNotes: true
+  autoSaveNotes: true,
+  screenWatchEnabled: false
 }
 
 interface UseSettingsReturn {
@@ -43,7 +44,7 @@ export function useSettings(): UseSettingsReturn {
   }, [])
 
   const isConfigured =
-    Boolean(settings.azureAiEndpoint) && Boolean(settings.azureAiKey)
+    Boolean(settings.aiEndpoint) && Boolean(settings.aiKey)
 
   return { settings, loading, updateSettings, isConfigured }
 }
