@@ -1,4 +1,4 @@
-# Phantom AI — Stealth Meeting Copilot
+# LetMe — Stealth AI Meeting Copilot
 
 A desktop overlay that provides real-time transcription, AI-powered meeting insights, and visual screen understanding — invisible to screen capture and sharing tools.
 
@@ -7,7 +7,7 @@ A desktop overlay that provides real-time transcription, AI-powered meeting insi
 ```bash
 npm install
 cp .env.example .env
-# Fill in your Azure credentials in .env
+# Fill in your AI provider credentials in .env
 npm run dev
 ```
 
@@ -30,6 +30,7 @@ npm run package
 ## Tech Stack
 
 - Electron + React + TypeScript + Vite
-- Azure AI Foundry (Claude) for AI
-- Azure Speech SDK for transcription
-- koffi for Windows capture exclusion
+- Any OpenAI-compatible AI provider (configurable endpoint)
+- Azure Speech SDK for real-time transcription
+- koffi for Windows capture exclusion (invisible to Zoom, Teams, Meet, OBS)
+- Smart screen watcher — auto-detects quizzes, slides, graphs, code, whiteboards

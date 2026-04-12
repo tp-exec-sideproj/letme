@@ -38,7 +38,7 @@ function getStore(): Store<Settings> {
   if (!store) {
     store = new Store<Settings>({
       name: 'config',
-      encryptionKey: 'phantom-ai-v1',
+      encryptionKey: 'letme-v1',
       defaults
     })
   }

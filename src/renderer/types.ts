@@ -37,7 +37,7 @@ export interface WatchEvent {
   error?: string
 }
 
-export interface PhantomAPI {
+export interface LetMeAPI {
   startSpeech: () => Promise<void>
   stopSpeech: () => Promise<void>
 
@@ -71,6 +71,6 @@ export interface PhantomAPI {
 
 declare global {
   interface Window {
-    api: PhantomAPI
+    api: LetMeAPI
   }
 }

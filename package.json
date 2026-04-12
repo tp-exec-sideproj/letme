@@ -1,7 +1,7 @@
 {
-  "name": "phantom-ai",
+  "name": "letme",
   "version": "1.0.0",
-  "description": "System Audio Helper",
+  "description": "LetMe — Stealth AI meeting copilot",
   "main": "out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
