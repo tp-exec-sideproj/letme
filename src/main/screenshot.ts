@@ -1,14 +1,6 @@
+import { desktopCapturer, nativeImage, screen } from 'electron'
 import { getOverlayWindow } from './overlay-window'
 import { applyExcludeFromCapture } from './capture-protection'
-
-let screenshotDesktop: any = null
-
-async function getScreenshotModule() {
-  if (!screenshotDesktop) {
-    screenshotDesktop = require('screenshot-desktop')
-  }
-  return screenshotDesktop!
-}
 
 export async function captureScreen(): Promise<string> {
   const win = getOverlayWindow()
@@ -20,10 +12,20 @@ export async function captureScreen(): Promise<string> {
       await new Promise((r) => setTimeout(r, 150))
     }
 
-    const capture = await getScreenshotModule()
-    const buf: Buffer = await (capture as any)({ format: 'png' })
+    const primaryDisplay = screen.getPrimaryDisplay()
+    const { width, height } = primaryDisplay.size
 
-    return buf.toString('base64')
+    const sources = await desktopCapturer.getSources({
+      types: ['screen'],
+      thumbnailSize: { width, height }
+    })
+
+    if (sources.length === 0) {
+      throw new Error('No screen sources available')
+    }
+
+    const thumbnail = sources[0].thumbnail
+    return thumbnail.toJPEG(90).toString('base64')
   } finally {
     if (wasVisible && win && !win.isDestroyed()) {
       win.show()

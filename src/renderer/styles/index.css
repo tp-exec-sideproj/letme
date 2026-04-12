@@ -707,3 +707,75 @@ html, body, #root {
 .update-btn:hover {
   background: rgba(34, 197, 94, 0.3);
 }
+
+/* === KB Builder === */
+.settings-hint {
+  font-size: 11px;
+  opacity: 0.6;
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.kb-active-badge {
+  font-size: 11px;
+  color: #a78bfa;
+  background: rgba(124, 106, 247, 0.12);
+  border: 1px solid rgba(124, 106, 247, 0.25);
+  border-radius: 4px;
+  padding: 4px 8px;
+  margin-bottom: 10px;
+  word-break: break-all;
+}
+
+.kb-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.kb-upload-btn {
+  width: 100%;
+  justify-content: center;
+  background: rgba(124, 106, 247, 0.15);
+  border-color: rgba(124, 106, 247, 0.3);
+}
+
+.kb-url-row {
+  display: flex;
+  gap: 6px;
+}
+
+.kb-url-row .settings-input {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  padding: 6px 8px;
+  color: #fff;
+  font-size: 12px;
+}
+
+.kb-url-row .settings-input::placeholder {
+  opacity: 0.4;
+}
+
+.kb-success {
+  font-size: 11px;
+  color: #86efac;
+  margin: 0;
+}
+
+.kb-error {
+  font-size: 11px;
+  color: #fca5a5;
+  margin: 0;
+}
+
+.kb-mode-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 10px;
+}

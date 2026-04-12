@@ -124,6 +124,25 @@ Communication style:
   }
 ]
 
-export function getKnowledgeBase(id: string): KnowledgeBase {
+export function getKnowledgeBase(id: string, personalContent?: string): KnowledgeBase {
+  if (id === 'personal' && personalContent) {
+    return {
+      id: 'personal',
+      name: 'Personal Profile',
+      description: 'Curated from your resume or website',
+      systemPrompt: `You are a real-time professional assistant with deep knowledge of the user's background. Use the profile below to give highly personalized interview answers, talking points, and responses.
+
+--- PERSONAL PROFILE ---
+${personalContent}
+--- END PROFILE ---
+
+Instructions:
+- Reference specific experiences, skills, and achievements from the profile when answering interview questions
+- Use STAR method (Situation, Task, Action, Result) for behavioral questions, drawing on real examples from the profile
+- When technical skills are asked about, refer to the specific technologies and projects in the profile
+- Keep answers concise and ready to speak — 2-3 sentences max unless a detailed answer is needed
+- If a question doesn't match the profile, give a general strong answer and note what from the profile is most relevant`
+    }
+  }
   return KNOWLEDGE_BASES.find((kb) => kb.id === id) ?? KNOWLEDGE_BASES[KNOWLEDGE_BASES.length - 1]
 }

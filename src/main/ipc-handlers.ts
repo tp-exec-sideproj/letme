@@ -1,4 +1,4 @@
-import { ipcMain, shell } from 'electron'
+import { ipcMain, shell, dialog } from 'electron'
 import { getOverlayWindow } from './overlay-window'
 import { showAnswer, hideAnswerWindow } from './answer-window'
 import { startSpeechRecognizer, stopSpeechRecognizer } from './speech'
@@ -10,6 +10,7 @@ import { reregisterHotkeys } from './hotkeys'
 import { transcriptBuffer, addToTranscript } from './shared-state'
 import { startScreenWatch, stopScreenWatch, isWatching } from './screen-watcher'
 import { getKnowledgeBase, KNOWLEDGE_BASES } from './knowledge-base'
+import { buildKBFromFile, buildKBFromURL } from './kb-builder'
 import type { WatchEvent } from './screen-watcher'
 
 function sendToRenderer(channel: string, ...args: any[]): void {
@@ -40,7 +41,7 @@ export function registerIPCHandlers(): void {
   // AI
   ipcMain.handle('ask-ai', async (_event, prompt: string, imageBase64?: string) => {
     const settings = getSettings()
-    const kb = getKnowledgeBase(settings.activeKnowledgeBase)
+    const kb = getKnowledgeBase(settings.activeKnowledgeBase, settings.personalKBSummary)
     const contextText = transcriptBuffer.length > 0
       ? `\nRecent meeting transcript:\n${transcriptBuffer.join('\n')}\n`
       : ''
@@ -60,7 +61,7 @@ export function registerIPCHandlers(): void {
 
   ipcMain.handle('ask-ai-stream', async (_event, prompt: string) => {
     const settings = getSettings()
-    const kb = getKnowledgeBase(settings.activeKnowledgeBase)
+    const kb = getKnowledgeBase(settings.activeKnowledgeBase, settings.personalKBSummary)
     const contextText = transcriptBuffer.length > 0
       ? `\nRecent meeting transcript:\n${transcriptBuffer.join('\n')}\n`
       : ''
@@ -110,6 +111,46 @@ export function registerIPCHandlers(): void {
 
   ipcMain.handle('get-active-knowledge-base', async () => {
     return getSettings().activeKnowledgeBase
+  })
+
+  ipcMain.handle('get-personal-kb-status', async () => {
+    const s = getSettings()
+    return { source: s.personalKBSource, hasSummary: !!s.personalKBSummary }
+  })
+
+  ipcMain.handle('open-file-for-kb', async () => {
+    const win = getOverlayWindow()
+    const result = await dialog.showOpenDialog(win!, {
+      title: 'Select Resume or Profile Document',
+      filters: [
+        { name: 'Documents', extensions: ['pdf', 'md', 'txt'] }
+      ],
+      properties: ['openFile']
+    })
+    if (result.canceled || result.filePaths.length === 0) return null
+    return result.filePaths[0]
+  })
+
+  ipcMain.handle('build-kb-from-file', async (_event, filePath: string) => {
+    const result = await buildKBFromFile(filePath)
+    saveSettings({
+      personalKBContent: result.content,
+      personalKBSource: result.source,
+      personalKBSummary: result.summary,
+      activeKnowledgeBase: 'personal'
+    })
+    return { source: result.source, summary: result.summary }
+  })
+
+  ipcMain.handle('build-kb-from-url', async (_event, url: string) => {
+    const result = await buildKBFromURL(url)
+    saveSettings({
+      personalKBContent: result.content,
+      personalKBSource: result.source,
+      personalKBSummary: result.summary,
+      activeKnowledgeBase: 'personal'
+    })
+    return { source: result.source, summary: result.summary }
   })
 
   // Screen Watch (continuous smart analysis)

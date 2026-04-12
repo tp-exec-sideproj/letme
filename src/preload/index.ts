@@ -73,6 +73,10 @@ contextBridge.exposeInMainWorld('api', {
   // Knowledge Base
   listKnowledgeBases: () => ipcRenderer.invoke('list-knowledge-bases'),
   getActiveKnowledgeBase: () => ipcRenderer.invoke('get-active-knowledge-base'),
+  getPersonalKBStatus: () => ipcRenderer.invoke('get-personal-kb-status'),
+  openFileForKB: () => ipcRenderer.invoke('open-file-for-kb'),
+  buildKBFromFile: (filePath: string) => ipcRenderer.invoke('build-kb-from-file', filePath),
+  buildKBFromURL: (url: string) => ipcRenderer.invoke('build-kb-from-url', url),
 
   // Screen Watch
   startScreenWatch: () => ipcRenderer.invoke('start-screen-watch'),

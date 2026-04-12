@@ -15,6 +15,9 @@ export interface Settings {
   autoSaveNotes: boolean
   screenWatchEnabled: boolean
   activeKnowledgeBase: string
+  personalKBContent: string
+  personalKBSource: string
+  personalKBSummary: string
 }
 
 const defaults: Settings = {
@@ -31,7 +34,10 @@ const defaults: Settings = {
   overlayOpacity: 0.88,
   autoSaveNotes: true,
   screenWatchEnabled: false,
-  activeKnowledgeBase: 'general'
+  activeKnowledgeBase: 'general',
+  personalKBContent: '',
+  personalKBSource: '',
+  personalKBSummary: ''
 }
 
 let store: Store<Settings> | null = null
@@ -63,7 +69,10 @@ export function getSettings(): Settings {
     overlayOpacity: s.get('overlayOpacity', defaults.overlayOpacity),
     autoSaveNotes: s.get('autoSaveNotes', defaults.autoSaveNotes),
     screenWatchEnabled: s.get('screenWatchEnabled', defaults.screenWatchEnabled),
-    activeKnowledgeBase: s.get('activeKnowledgeBase', defaults.activeKnowledgeBase)
+    activeKnowledgeBase: s.get('activeKnowledgeBase', defaults.activeKnowledgeBase),
+    personalKBContent: s.get('personalKBContent', defaults.personalKBContent),
+    personalKBSource: s.get('personalKBSource', defaults.personalKBSource),
+    personalKBSummary: s.get('personalKBSummary', defaults.personalKBSummary)
   }
 }
 

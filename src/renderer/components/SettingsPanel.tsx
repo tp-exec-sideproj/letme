@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import type { Settings, KnowledgeBaseInfo } from '../types'
+import type { Settings } from '../types'
 
 interface SettingsPanelProps {
   settings: Settings
@@ -7,17 +7,23 @@ interface SettingsPanelProps {
   isConfigured: boolean
 }
 
+type KBBuildStatus = 'idle' | 'building' | 'done' | 'error'
+
 export default function SettingsPanel({
   settings,
   onUpdateSettings
 }: SettingsPanelProps) {
   const [saving, setSaving] = useState(false)
   const [local, setLocal] = useState<Settings>({ ...settings })
-  const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBaseInfo[]>([])
+  const [kbStatus, setKbStatus] = useState<KBBuildStatus>('idle')
+  const [kbError, setKbError] = useState('')
+  const [kbSource, setKbSource] = useState(settings.personalKBSource || '')
+  const [urlInput, setUrlInput] = useState('')
 
   useEffect(() => {
-    window.api.listKnowledgeBases().then(setKnowledgeBases).catch(() => {})
-  }, [])
+    setLocal({ ...settings })
+    setKbSource(settings.personalKBSource || '')
+  }, [settings])
 
   const handleChange = (key: keyof Settings, value: string | number | boolean) => {
     setLocal((prev) => ({ ...prev, [key]: value }))
@@ -32,29 +38,125 @@ export default function SettingsPanel({
     }
   }
 
+  const handlePickFile = async () => {
+    setKbStatus('building')
+    setKbError('')
+    try {
+      const filePath = await (window.api as any).openFileForKB()
+      if (!filePath) { setKbStatus('idle'); return }
+      const result = await (window.api as any).buildKBFromFile(filePath)
+      setKbSource(result.source)
+      setLocal((prev) => ({ ...prev, activeKnowledgeBase: 'personal' }))
+      setKbStatus('done')
+    } catch (err: any) {
+      setKbError(err.message || 'Failed to process file')
+      setKbStatus('error')
+    }
+  }
+
+  const handleBuildFromURL = async () => {
+    if (!urlInput.trim()) return
+    setKbStatus('building')
+    setKbError('')
+    try {
+      const result = await (window.api as any).buildKBFromURL(urlInput.trim())
+      setKbSource(result.source)
+      setLocal((prev) => ({ ...prev, activeKnowledgeBase: 'personal' }))
+      setKbStatus('done')
+    } catch (err: any) {
+      setKbError(err.message || 'Failed to fetch URL')
+      setKbStatus('error')
+    }
+  }
+
   return (
     <div className="settings-panel">
       <div className="settings-section">
-        <h4>Knowledge Base</h4>
-        <p style={{ fontSize: '11px', opacity: 0.6, marginBottom: '8px' }}>
-          Select the context that matches your current session for better AI responses.
+        <h4>Personal Knowledge Base</h4>
+        <p className="settings-hint">
+          Upload your resume or link your website so the AI can give answers tailored to your background.
         </p>
-        <div className="kb-list">
-          {knowledgeBases.map((kb) => (
-            <label key={kb.id} className="kb-item">
-              <input
-                type="radio"
-                name="knowledgeBase"
-                value={kb.id}
-                checked={local.activeKnowledgeBase === kb.id}
-                onChange={() => handleChange('activeKnowledgeBase', kb.id)}
-              />
-              <div className="kb-info">
-                <span className="kb-name">{kb.name}</span>
-                <span className="kb-desc">{kb.description}</span>
-              </div>
-            </label>
-          ))}
+
+        {kbSource && local.activeKnowledgeBase === 'personal' && (
+          <div className="kb-active-badge">
+            Active: {kbSource}
+          </div>
+        )}
+
+        <div className="kb-builder">
+          <button
+            className="action-btn kb-upload-btn"
+            onClick={handlePickFile}
+            disabled={kbStatus === 'building'}
+          >
+            {kbStatus === 'building' ? 'Processing...' : 'Upload Resume / PDF / Markdown'}
+          </button>
+
+          <div className="kb-url-row">
+            <input
+              className="settings-input"
+              type="text"
+              placeholder="https://yourportfolio.com"
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleBuildFromURL()}
+              disabled={kbStatus === 'building'}
+            />
+            <button
+              className="action-btn"
+              onClick={handleBuildFromURL}
+              disabled={kbStatus === 'building' || !urlInput.trim()}
+            >
+              Import
+            </button>
+          </div>
+
+          {kbStatus === 'done' && (
+            <p className="kb-success">Knowledge base built from {kbSource}. AI will now use your profile.</p>
+          )}
+          {kbStatus === 'error' && (
+            <p className="kb-error">{kbError}</p>
+          )}
+        </div>
+
+        <div className="kb-mode-row">
+          <label className="setting-row checkbox">
+            <input
+              type="radio"
+              name="kbMode"
+              checked={local.activeKnowledgeBase === 'personal'}
+              onChange={() => handleChange('activeKnowledgeBase', 'personal')}
+              disabled={!kbSource}
+            />
+            <span>Personal Profile {!kbSource && <small>(upload first)</small>}</span>
+          </label>
+          <label className="setting-row checkbox">
+            <input
+              type="radio"
+              name="kbMode"
+              checked={local.activeKnowledgeBase === 'interview'}
+              onChange={() => handleChange('activeKnowledgeBase', 'interview')}
+            />
+            <span>General Interview</span>
+          </label>
+          <label className="setting-row checkbox">
+            <input
+              type="radio"
+              name="kbMode"
+              checked={local.activeKnowledgeBase === 'meeting'}
+              onChange={() => handleChange('activeKnowledgeBase', 'meeting')}
+            />
+            <span>Business Meeting</span>
+          </label>
+          <label className="setting-row checkbox">
+            <input
+              type="radio"
+              name="kbMode"
+              checked={local.activeKnowledgeBase === 'general'}
+              onChange={() => handleChange('activeKnowledgeBase', 'general')}
+            />
+            <span>General</span>
+          </label>
         </div>
       </div>
 

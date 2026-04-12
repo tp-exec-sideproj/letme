@@ -15,7 +15,10 @@ const defaultSettings: Settings = {
   overlayOpacity: 0.88,
   autoSaveNotes: true,
   screenWatchEnabled: false,
-  activeKnowledgeBase: 'general'
+  activeKnowledgeBase: 'general',
+  personalKBContent: '',
+  personalKBSource: '',
+  personalKBSummary: ''
 }
 
 interface UseSettingsReturn {
