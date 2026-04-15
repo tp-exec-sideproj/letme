@@ -1,4 +1,5 @@
 import type { PanelTab } from '../types'
+import { LogoWordmark } from './Logo'
 
 interface HeaderProps {
   activeTab: PanelTab
@@ -19,19 +20,22 @@ export default function Header({ activeTab, setActiveTab, isRecording, isConfigu
   return (
     <div className="header">
       <div className="drag-handle">
-        <div className="drag-grip" />
+        {/* Logo wordmark — drag region */}
+        <LogoWordmark size={26} />
+
+        {/* Status indicators + close — no-drag */}
         <div className="header-status">
-          {isRecording && <span className="recording-dot" title="Recording" />}
+          {isRecording && <span className="recording-dot" title="Transcribing system audio" />}
           {isWatching && <span className="watch-dot" title="Screen watch active" />}
           {!isConfigured && <span className="config-warning" title="API not configured">!</span>}
+          <button
+            className="close-btn"
+            onClick={() => window.api.hideOverlay()}
+            title="Hide (Ctrl+\)"
+          >
+            ×
+          </button>
         </div>
-        <button
-          className="close-btn"
-          onClick={() => window.api.hideOverlay()}
-          title="Hide (Ctrl+\)"
-        >
-          x
-        </button>
       </div>
 
       <div className="tab-bar">

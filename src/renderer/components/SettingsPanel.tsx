@@ -42,11 +42,13 @@ export default function SettingsPanel({
     setKbStatus('building')
     setKbError('')
     try {
-      const filePath = await (window.api as any).openFileForKB()
+      const filePath = await window.api.openFileForKB()
       if (!filePath) { setKbStatus('idle'); return }
-      const result = await (window.api as any).buildKBFromFile(filePath)
+      const result = await window.api.buildKBFromFile(filePath)
+      // Refresh full settings from main so Save Settings won't wipe KB fields
+      const refreshed = await window.api.getSettings()
+      setLocal(refreshed)
       setKbSource(result.source)
-      setLocal((prev) => ({ ...prev, activeKnowledgeBase: 'personal' }))
       setKbStatus('done')
     } catch (err: any) {
       setKbError(err.message || 'Failed to process file')
@@ -59,9 +61,11 @@ export default function SettingsPanel({
     setKbStatus('building')
     setKbError('')
     try {
-      const result = await (window.api as any).buildKBFromURL(urlInput.trim())
+      const result = await window.api.buildKBFromURL(urlInput.trim())
+      // Refresh full settings from main so Save Settings won't wipe KB fields
+      const refreshed = await window.api.getSettings()
+      setLocal(refreshed)
       setKbSource(result.source)
-      setLocal((prev) => ({ ...prev, activeKnowledgeBase: 'personal' }))
       setKbStatus('done')
     } catch (err: any) {
       setKbError(err.message || 'Failed to fetch URL')
@@ -191,7 +195,7 @@ export default function SettingsPanel({
           <span>
             Continuous screen watch
             <small style={{ display: 'block', opacity: 0.6, fontSize: '11px', marginTop: '2px' }}>
-              Auto-detect and note quizzes, slides, graphs, code every 10s
+              Auto-detects quizzes, slides, graphs, code every 3s
             </small>
           </span>
         </label>

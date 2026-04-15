@@ -27,6 +27,10 @@ async function fetchURL(url: string): Promise<string> {
     const chunks: Buffer[] = []
 
     request.on('response', (response) => {
+      if (response.statusCode && response.statusCode >= 400) {
+        reject(new Error(`HTTP ${response.statusCode} fetching URL`))
+        return
+      }
       response.on('data', (chunk) => chunks.push(chunk))
       response.on('end', () => {
         const html = Buffer.concat(chunks).toString('utf-8')
@@ -54,10 +58,12 @@ async function fetchURL(url: string): Promise<string> {
 }
 
 async function parsePDF(filePath: string): Promise<string> {
-  const pdfParse = require('pdf-parse')
+  // Use the Node.js-specific build — the default pdf-parse entry bundles pdf.js
+  // which directly accesses window.screen and crashes in Electron main process
+  const pdfParse = require('pdf-parse/node')
   const buf = readFileSync(filePath)
   const data = await pdfParse(buf)
-  return (data.text as string).slice(0, 12000)
+  return (data.text as string).trim().slice(0, 12000)
 }
 
 function parseMarkdown(filePath: string): string {

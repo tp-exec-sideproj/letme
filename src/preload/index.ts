@@ -109,13 +109,48 @@ contextBridge.exposeInMainWorld('api', {
     }
   },
 
-  // Answer overlay (floating top-center window)
+  onSpeechError: (cb: (message: string) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, message: string) => cb(message)
+    ipcRenderer.on('speech-error', handler)
+    return () => ipcRenderer.removeListener('speech-error', handler)
+  },
+
+  // Answer overlay (floating right-side panel)
+  onAnswerNewBlock: (cb: (question: string) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, question: string) => cb(question)
+    ipcRenderer.on('answer-new-block', handler)
+    return () => ipcRenderer.removeListener('answer-new-block', handler)
+  },
+
+  onAnswerChunk: (cb: (chunk: string) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, chunk: string) => cb(chunk)
+    ipcRenderer.on('answer-chunk', handler)
+    return () => ipcRenderer.removeListener('answer-chunk', handler)
+  },
+
+  onAnswerFinalize: (cb: (text: string) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, text: string) => cb(text)
+    ipcRenderer.on('answer-finalize', handler)
+    return () => ipcRenderer.removeListener('answer-finalize', handler)
+  },
+
+  onAnswerBegin: (cb: () => void) => {
+    const handler = () => cb()
+    ipcRenderer.on('answer-begin', handler)
+    return () => ipcRenderer.removeListener('answer-begin', handler)
+  },
+
   onAnswer: (cb: (payload: { text: string; category: string }) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, payload: { text: string; category: string }) => {
       cb(payload)
     }
     ipcRenderer.on('answer-update', handler)
     return () => ipcRenderer.removeListener('answer-update', handler)
+  },
+
+  // Audio chunk from renderer mic capture → main process push stream
+  sendAudioChunk: (buffer: ArrayBuffer) => {
+    ipcRenderer.send('audio-chunk', Buffer.from(buffer))
   },
 
   dismissAnswer: () => ipcRenderer.send('hide-answer'),

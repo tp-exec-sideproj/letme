@@ -47,7 +47,7 @@ export function useSettings(): UseSettingsReturn {
     setSettings((prev) => ({ ...prev, ...partial }))
   }, [])
 
-  const isConfigured = true
+  const isConfigured = !!(settings.aiKey && settings.aiEndpoint)
 
   return { settings, loading, updateSettings, isConfigured }
 }

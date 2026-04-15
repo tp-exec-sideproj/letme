@@ -1,4 +1,4 @@
-import { BrowserWindow, screen } from 'electron'
+import { BrowserWindow, screen, desktopCapturer } from 'electron'
 import { join } from 'path'
 import { applyExcludeFromCapture } from './capture-protection'
 
@@ -32,7 +32,7 @@ export function createOverlayWindow(): BrowserWindow {
       nodeIntegration: false,
       contextIsolation: true,
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: true
     }
   })
 
@@ -47,6 +47,20 @@ export function createOverlayWindow(): BrowserWindow {
     if (process.platform === 'win32') {
       applyExcludeFromCapture(win)
     }
+  })
+
+  // ── System audio (loopback) capture ────────────────────────────────────────
+  // When the renderer calls getDisplayMedia({ audio: true }), intercept it and
+  // return WASAPI loopback audio (what the user HEARS) instead of showing the
+  // native screen-picker dialog. No microphone permission needed.
+  win.webContents.session.setDisplayMediaRequestHandler((_request, callback) => {
+    desktopCapturer.getSources({ types: ['screen'] }).then((sources) => {
+      // video: first screen (renderer will immediately stop the video track)
+      // audio: 'loopback' tells Electron to capture system audio via WASAPI on Windows
+      callback({ video: sources[0], audio: 'loopback' })
+    }).catch(() => {
+      callback({})
+    })
   })
 
   win.once('ready-to-show', () => {

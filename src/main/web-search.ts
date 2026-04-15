@@ -1,4 +1,5 @@
 import { net } from 'electron'
+import { BING_SEARCH_KEY } from './env-config'
 
 export interface SearchResult {
   title: string
@@ -11,7 +12,7 @@ export interface SearchResult {
  * with optional fallback to Bing if BING_SEARCH_KEY is set in env.
  */
 export async function searchWeb(query: string): Promise<SearchResult[]> {
-  const bingKey = process.env.BING_SEARCH_KEY
+  const bingKey = BING_SEARCH_KEY
 
   if (bingKey) {
     try {

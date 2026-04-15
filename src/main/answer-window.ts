@@ -1,11 +1,11 @@
-import { BrowserWindow, screen, ipcMain } from 'electron'
+import { BrowserWindow, screen } from 'electron'
 import { join } from 'path'
 import { applyExcludeFromCapture } from './capture-protection'
 
 let answerWindow: BrowserWindow | null = null
-let hideTimer: ReturnType<typeof setTimeout> | null = null
 
-const AUTO_HIDE_MS = 45_000
+const WIN_WIDTH = 540
+const WIN_HEIGHT = 640
 
 export function getAnswerWindow(): BrowserWindow | null {
   return answerWindow
@@ -13,15 +13,13 @@ export function getAnswerWindow(): BrowserWindow | null {
 
 export function createAnswerWindow(): BrowserWindow {
   const primaryDisplay = screen.getPrimaryDisplay()
-  const { width: screenWidth } = primaryDisplay.workAreaSize
-
-  const winWidth = 500
+  const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize
 
   const win = new BrowserWindow({
-    width: winWidth,
-    height: 220,
-    x: Math.round((screenWidth - winWidth) / 2),
-    y: 18,
+    width: WIN_WIDTH,
+    height: WIN_HEIGHT,
+    x: screenWidth - WIN_WIDTH - 10,
+    y: Math.round((screenHeight - WIN_HEIGHT) / 2),
     transparent: true,
     frame: false,
     alwaysOnTop: true,
@@ -37,7 +35,7 @@ export function createAnswerWindow(): BrowserWindow {
       nodeIntegration: false,
       contextIsolation: true,
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: true
     }
   })
 
@@ -61,48 +59,58 @@ export function createAnswerWindow(): BrowserWindow {
   }
 
   answerWindow = win
-
-  win.on('closed', () => {
-    answerWindow = null
-  })
+  win.on('closed', () => { answerWindow = null })
 
   return win
 }
 
+function ensureVisible(): void {
+  if (!answerWindow || answerWindow.isDestroyed()) return
+  if (!answerWindow.isVisible()) answerWindow.show()
+}
+
+/**
+ * Start a new Q&A block for a detected question.
+ * Opens the window immediately so user sees it before the first token.
+ */
+export function startNewBlock(question: string): void {
+  if (!answerWindow || answerWindow.isDestroyed()) return
+  answerWindow.webContents.send('answer-new-block', question)
+  ensureVisible()
+}
+
+/**
+ * Stream a chunk into the current (last) block.
+ */
+export function updateAnswerChunk(chunk: string): void {
+  if (!answerWindow || answerWindow.isDestroyed()) return
+  answerWindow.webContents.send('answer-chunk', chunk)
+}
+
+/**
+ * Finalize the current block with the complete answer text.
+ */
+export function finalizeBlock(text: string): void {
+  if (!answerWindow || answerWindow.isDestroyed()) return
+  answerWindow.webContents.send('answer-finalize', text)
+}
+
+/**
+ * Show a single quiz answer block (replaces the whole session view).
+ */
 export function showAnswer(text: string, category: string): void {
   if (!answerWindow || answerWindow.isDestroyed()) return
-
-  // Clear any pending auto-hide
-  if (hideTimer) {
-    clearTimeout(hideTimer)
-    hideTimer = null
-  }
-
-  // Dynamically resize height based on content length
-  const lines = Math.min(Math.ceil(text.length / 60) + 4, 20)
-  const height = Math.min(Math.max(lines * 18 + 60, 120), 400)
-  answerWindow.setSize(500, height)
-
-  // Re-center after resize
-  const primaryDisplay = screen.getPrimaryDisplay()
-  const { width: screenWidth } = primaryDisplay.workAreaSize
-  answerWindow.setPosition(Math.round((screenWidth - 500) / 2), 18)
-
   answerWindow.webContents.send('answer-update', { text, category })
-  answerWindow.show()
-
-  // Auto-hide after 45 seconds of inactivity
-  hideTimer = setTimeout(() => {
-    hideAnswerWindow()
-  }, AUTO_HIDE_MS)
+  ensureVisible()
 }
 
 export function hideAnswerWindow(): void {
-  if (hideTimer) {
-    clearTimeout(hideTimer)
-    hideTimer = null
-  }
   if (answerWindow && !answerWindow.isDestroyed()) {
     answerWindow.hide()
   }
+}
+
+// Legacy alias kept so existing quiz code compiles
+export function beginAnswer(): void {
+  /* no-op — replaced by startNewBlock */
 }

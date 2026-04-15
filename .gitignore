@@ -1,8 +1,10 @@
 node_modules/
 dist/
 dist-electron/
+dist_new/
 out/
 .env
+src/main/env-config.ts
 *.log
 .DS_Store
 Thumbs.db

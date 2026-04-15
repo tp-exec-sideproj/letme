@@ -1,5 +1,5 @@
 import { app } from 'electron'
-import { join } from 'path'
+import { join, resolve, basename } from 'path'
 import { existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync } from 'fs'
 
 const NOTES_DIR = join(app.getPath('userData'), 'notes')
@@ -59,9 +59,14 @@ export function listNotes(): string[] {
 
 export function loadNote(filename: string): string {
   ensureNotesDir()
-  const filepath = join(NOTES_DIR, filename)
+  // Sanitize: only allow the basename to prevent path traversal
+  const safe = basename(filename)
+  const filepath = resolve(NOTES_DIR, safe)
+  if (!filepath.startsWith(resolve(NOTES_DIR))) {
+    throw new Error('Invalid note filename')
+  }
   if (!existsSync(filepath)) {
-    throw new Error(`Note file not found: ${filename}`)
+    throw new Error(`Note file not found: ${safe}`)
   }
   return readFileSync(filepath, 'utf-8')
 }

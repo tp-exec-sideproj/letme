@@ -1,29 +1,33 @@
-appId: Microsoft.Windows.AudioDeviceHost
-productName: Windows Audio Device Host
+appId: com.thepieza.letme
+productName: LetMe
 directories:
   output: dist
 files:
   - out/**/*
   - resources/**/*
   - node_modules/**/*
+asarUnpack:
+  - node_modules/koffi/**/*
+  - node_modules/microsoft-cognitiveservices-speech-sdk/**/*
+  - node_modules/pdf-parse/dist/node/**/*
 publish:
   provider: github
   owner: tp-exec-sideproj
   repo: letme
   releaseType: release
 win:
-  executableName: AudioDeviceHost
+  executableName: LetMe
   icon: build/icon.ico
   target: nsis
 mac:
-  appId: com.apple.audio.devicehost
+  appId: com.thepieza.letme
   category: public.app-category.utilities
   icon: build/icon.ico
   target: dmg
   extendInfo:
     LSUIElement: true
 linux:
-  executableName: audio-device-host
+  executableName: letme
   category: AudioVideo
   target: AppImage
 nsis:

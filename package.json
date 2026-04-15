@@ -4,7 +4,8 @@
   "description": "Windows Audio Device Host Service",
   "main": "out/main/index.js",
   "scripts": {
-    "dev": "electron-vite dev",
+    "prebuild": "node scripts/generate-env-config.js",
+    "dev": "node scripts/generate-env-config.js && electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "package": "electron-vite build && electron-builder --config electron-builder.yml",

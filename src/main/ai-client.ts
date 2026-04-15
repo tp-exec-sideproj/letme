@@ -61,7 +61,7 @@ function buildMessagesWithImage(
           { type: 'text' as const, text: textContent },
           {
             type: 'image_url' as const,
-            image_url: { url: `data:image/png;base64,${imageBase64}` }
+            image_url: { url: `data:image/jpeg;base64,${imageBase64}` }
           }
         ]
       }
@@ -88,8 +88,10 @@ export async function askAI(
   const response = await client.chat.completions.create({
     model: getModel(),
     messages: finalMessages,
-    max_tokens: 2048,
-    ...(useWebSearch && !imageBase64 ? { tools: [WEB_SEARCH_TOOL], tool_choice: 'auto' } : {})
+    max_tokens: 4096,
+    ...(useWebSearch && !imageBase64 ? { tools: [WEB_SEARCH_TOOL], tool_choice: 'auto' } : {}),
+    // When image is included with web search, still allow tool calls
+    ...(useWebSearch && imageBase64 ? { tools: [WEB_SEARCH_TOOL], tool_choice: 'auto' } : {})
   })
 
   const choice = response.choices[0]
@@ -129,7 +131,7 @@ export async function askAI(
       const followup = await client.chat.completions.create({
         model: getModel(),
         messages: followupMessages,
-        max_tokens: 2048
+        max_tokens: 4096
       })
 
       return followup.choices[0]?.message?.content || ''
@@ -150,6 +152,42 @@ export async function askAIStream(
     messages,
     max_tokens: 2048,
     stream: true
+  })
+
+  let fullText = ''
+  for await (const chunk of stream) {
+    const delta = chunk.choices[0]?.delta?.content
+    if (delta) {
+      fullText += delta
+      onChunk(delta)
+    }
+  }
+
+  return fullText
+}
+
+/**
+ * Fast streaming answer — no web search, minimal tokens, optimized for real-time response.
+ * Used for auto-answering live transcript questions in the center overlay.
+ */
+export async function fastAnswerStream(
+  question: string,
+  systemPrompt: string,
+  history: ChatMessage[],
+  onChunk: (text: string) => void
+): Promise<string> {
+  const client = getClient()
+
+  const stream = await client.chat.completions.create({
+    model: getModel(),
+    messages: [
+      { role: 'system', content: systemPrompt },
+      ...history,
+      { role: 'user', content: question }
+    ],
+    max_tokens: 700,
+    stream: true,
+    temperature: 0.3
   })
 
   let fullText = ''

@@ -137,10 +137,10 @@ export default function App() {
 
   // Auto-update listeners
   useEffect(() => {
-    const c1 = (window.api as any).onUpdateAvailable((info: { version: string }) => {
+    const c1 = window.api.onUpdateAvailable((info: { version: string }) => {
       setUpdateInfo({ version: info.version, ready: false })
     })
-    const c2 = (window.api as any).onUpdateDownloaded((info: { version: string }) => {
+    const c2 = window.api.onUpdateDownloaded((info: { version: string }) => {
       setUpdateInfo({ version: info.version, ready: true })
     })
     return () => { c1(); c2() }
@@ -261,7 +261,7 @@ export default function App() {
       opacity={settings.overlayOpacity}
       isWatching={isWatching}
       updateInfo={updateInfo}
-      onInstallUpdate={() => (window.api as any).installUpdate()}
+      onInstallUpdate={() => window.api.installUpdate()}
     />
   )
 }

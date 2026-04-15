@@ -45,7 +45,7 @@ const WORTHY_CATEGORIES: ContentCategory[] = [
   'FORM'
 ]
 
-const MIN_CONFIDENCE = 60
+const MIN_CONFIDENCE = 45
 
 const CLASSIFIER_SYSTEM_PROMPT = `You are a screen content classifier for a meeting assistant.
 Analyze the screenshot and determine if it contains noteworthy meeting content worth taking notes about.
@@ -69,32 +69,55 @@ Categories to use:
 TAKE NOTES (worthy: true) for: QUIZ, PRESENTATION, WHITEBOARD, DOCUMENT, CODE, GRAPH, FORM
 SKIP (worthy: false) for: DESKTOP, VIDEO, CHAT, OTHER`
 
-const QUIZ_ANSWER_SYSTEM_PROMPT = `You are an expert assistant helping answer quiz and exam questions in real time.
+const QUIZ_ANSWER_SYSTEM_PROMPT = `You are an expert exam assistant with deep knowledge across all subjects. The screenshot shows a quiz, exam, assessment, or test. Analyze every visible question and provide the correct answers.
 
-The screenshot shows a quiz, exam, assessment, or test. Your job:
-1. Read ALL visible questions carefully
-2. For each question, provide the correct answer with a brief explanation
-3. For multiple choice questions, identify the correct option letter AND explain why
-4. For coding challenges, provide working code with comments
-5. For math or logic problems, show the solution steps
-6. Be accurate and direct — the user needs correct answers immediately
+PROCESS (follow this for every question):
+1. Read the question carefully — identify what is being asked
+2. Identify the question type: multiple choice, true/false, fill-in, short answer, coding
+3. Think through the answer step by step before writing it
+4. State the final answer clearly and directly
 
-Format your response as:
-Q1: [question text if visible]
-Answer: [correct answer]
-Reason: [brief explanation why this is correct]
+RULES:
+- For multiple choice: identify the correct option letter AND explain why it is correct AND why other options are wrong
+- For true/false: state True or False then explain why
+- For coding: provide complete, working code with inline comments
+- For math/logic: show the derivation steps then the final answer
+- If a question appears already answered on screen, verify it and correct if wrong
+- Be definitive — no hedging, no "it depends", just the correct answer
+- If multiple questions are visible, answer ALL of them
 
-Q2: [question text if visible]
-Answer: [correct answer]
-Reason: [brief explanation]
+FORMAT (use exactly this structure for each question):
+Q[N]: [repeat the question text]
+Answer: [the correct answer — letter + full text for multiple choice]
+Reason: [brief explanation — 1-2 sentences max]
 
-If the question has already been answered on screen, confirm if the answer shown is correct or provide the correct one.
-Do not hedge or add disclaimers — just answer correctly and concisely.`
+---
+
+If you are genuinely uncertain about a factual question, use web search to verify.`
 
 let watchInterval: ReturnType<typeof setInterval> | null = null
 let lastCaptureHash = ''
 let lastWorthyHash = ''
 let sendEvent: ((event: WatchEvent) => void) | null = null
+let isRunningCheck = false  // guard against overlapping async calls
+
+// Cost controls — cap AI calls to avoid runaway billing
+const CALLS_PER_HOUR_LIMIT = 200
+let callsThisHour = 0
+let hourWindowStart = Date.now()
+
+function withinCostLimit(): boolean {
+  const now = Date.now()
+  if (now - hourWindowStart >= 3_600_000) {
+    callsThisHour = 0
+    hourWindowStart = now
+  }
+  return callsThisHour < CALLS_PER_HOUR_LIMIT
+}
+
+function recordCall(): void {
+  callsThisHour++
+}
 
 export function startScreenWatch(onEvent: (event: WatchEvent) => void): void {
   if (watchInterval) return
@@ -102,7 +125,7 @@ export function startScreenWatch(onEvent: (event: WatchEvent) => void): void {
   lastCaptureHash = ''
   lastWorthyHash = ''
 
-  // Immediate first check, then every 10 seconds
+  // Immediate first check, then every 10 seconds (was 3s — too expensive)
   runCheck()
   watchInterval = setInterval(runCheck, 10_000)
 }
@@ -113,6 +136,7 @@ export function stopScreenWatch(): void {
     watchInterval = null
   }
   sendEvent = null
+  isRunningCheck = false
 }
 
 export function isWatching(): boolean {
@@ -121,7 +145,12 @@ export function isWatching(): boolean {
 
 async function runCheck(): Promise<void> {
   if (!sendEvent) return
-
+  if (isRunningCheck) return  // previous check still running — skip this tick
+  if (!withinCostLimit()) {
+    sendEvent?.({ type: 'error', reason: `AI call limit reached (${CALLS_PER_HOUR_LIMIT}/hr). Pausing until next hour.` })
+    return
+  }
+  isRunningCheck = true
   try {
     const imageBase64 = await captureScreen()
 
@@ -134,6 +163,7 @@ async function runCheck(): Promise<void> {
     lastCaptureHash = hash
 
     // Step 1: Classify content — is it worth analyzing?
+    recordCall()
     const classification = await classifyContent(imageBase64)
 
     sendEvent({
@@ -201,6 +231,8 @@ async function runCheck(): Promise<void> {
     if (sendEvent) {
       sendEvent({ type: 'error', error: msg })
     }
+  } finally {
+    isRunningCheck = false
   }
 }
 
@@ -217,9 +249,10 @@ async function classifyContent(imageBase64: string): Promise<ContentClassificati
 async function answerQuiz(imageBase64: string): Promise<string> {
   const messages = [
     { role: 'system' as const, content: QUIZ_ANSWER_SYSTEM_PROMPT },
-    { role: 'user' as const, content: 'Answer the questions in this screenshot:' }
+    { role: 'user' as const, content: 'Answer all questions visible in this screenshot. Think step by step before giving each answer.' }
   ]
-  return askAI(messages, imageBase64)
+  // Use askAI with web search enabled so it can look up factual answers
+  return askAI(messages, imageBase64, true)
 }
 
 function parseClassification(raw: string): ContentClassification {

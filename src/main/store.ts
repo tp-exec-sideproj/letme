@@ -1,4 +1,11 @@
 import Store from 'electron-store'
+import {
+  AI_ENDPOINT,
+  AI_KEY,
+  AI_MODEL,
+  AZURE_SPEECH_KEY,
+  AZURE_SPEECH_REGION
+} from './env-config'
 
 export interface Settings {
   aiEndpoint: string
@@ -21,11 +28,11 @@ export interface Settings {
 }
 
 const defaults: Settings = {
-  aiEndpoint: process.env.AI_ENDPOINT || '',
-  aiKey: process.env.AI_KEY || '',
-  aiModel: process.env.AI_MODEL || '',
-  azureSpeechKey: process.env.AZURE_SPEECH_KEY || '',
-  azureSpeechRegion: process.env.AZURE_SPEECH_REGION || 'eastus',
+  aiEndpoint: AI_ENDPOINT,
+  aiKey: AI_KEY,
+  aiModel: AI_MODEL,
+  azureSpeechKey: AZURE_SPEECH_KEY,
+  azureSpeechRegion: AZURE_SPEECH_REGION,
   hotkeyToggle: 'CommandOrControl+\\',
   hotkeyAskAI: 'CommandOrControl+Return',
   hotkeyScreenshot: 'CommandOrControl+Shift+Return',
@@ -56,11 +63,12 @@ function getStore(): Store<Settings> {
 export function getSettings(): Settings {
   const s = getStore()
   return {
-    aiEndpoint: s.get('aiEndpoint', defaults.aiEndpoint),
-    aiKey: s.get('aiKey', defaults.aiKey),
-    aiModel: s.get('aiModel', defaults.aiModel),
-    azureSpeechKey: s.get('azureSpeechKey', defaults.azureSpeechKey),
-    azureSpeechRegion: s.get('azureSpeechRegion', defaults.azureSpeechRegion),
+    // For credential fields, fall back to baked-in env defaults if the stored value is empty
+    aiEndpoint: s.get('aiEndpoint') || defaults.aiEndpoint,
+    aiKey: s.get('aiKey') || defaults.aiKey,
+    aiModel: s.get('aiModel') || defaults.aiModel,
+    azureSpeechKey: s.get('azureSpeechKey') || defaults.azureSpeechKey,
+    azureSpeechRegion: s.get('azureSpeechRegion') || defaults.azureSpeechRegion,
     hotkeyToggle: s.get('hotkeyToggle', defaults.hotkeyToggle),
     hotkeyAskAI: s.get('hotkeyAskAI', defaults.hotkeyAskAI),
     hotkeyScreenshot: s.get('hotkeyScreenshot', defaults.hotkeyScreenshot),

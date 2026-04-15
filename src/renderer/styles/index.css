@@ -1,3 +1,17 @@
+/* === Brand Tokens === */
+:root {
+  --brand-primary:    #7c6af7;
+  --brand-light:      #c4b5fd;
+  --brand-deep:       #7c3aed;
+  --brand-glow:       rgba(124, 106, 247, 0.18);
+  --brand-border:     rgba(124, 106, 247, 0.25);
+  --bg-base:          #0b0b14;
+  --bg-panel:         rgba(13, 13, 20, 0.92);
+  --text-primary:     rgba(255, 255, 255, 0.92);
+  --text-secondary:   rgba(255, 255, 255, 0.5);
+  --text-muted:       rgba(255, 255, 255, 0.28);
+}
+
 /* === Reset & Base === */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -34,35 +48,52 @@ html, body, #root {
   max-height: 680px;
   display: flex;
   flex-direction: column;
-  background: rgba(13, 13, 20, 0.88);
+  background: var(--bg-panel);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--brand-border);
   border-radius: 16px;
   overflow: hidden;
   pointer-events: auto;
   position: relative;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.4), 0 20px 60px rgba(0,0,0,0.6), 0 0 40px var(--brand-glow);
 }
 
 /* === Header / Drag Handle === */
 .header {
   flex-shrink: 0;
+  -webkit-app-region: drag;
+  cursor: grab;
+  background: linear-gradient(180deg, rgba(124,106,247,0.08) 0%, transparent 100%);
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.header:active {
+  cursor: grabbing;
 }
 
 .drag-handle {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  -webkit-app-region: drag;
-  cursor: grab;
+  padding: 10px 12px 8px;
 }
 
-.drag-grip {
-  width: 40px;
-  height: 4px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.15);
+/* Logo wordmark in header */
+.letme-wordmark {
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.letme-wordmark-text {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  background: linear-gradient(135deg, #c4b5fd 0%, #7c6af7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .header-status {
@@ -76,16 +107,22 @@ html, body, #root {
   -webkit-app-region: no-drag;
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 18px;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 16px;
   cursor: pointer;
   padding: 2px 6px;
   border-radius: 4px;
   transition: all 0.15s;
+  line-height: 1;
 }
 .close-btn:hover {
   color: #fff;
   background: rgba(255, 255, 255, 0.1);
+}
+
+/* Tab bar must be no-drag so clicks work */
+.tab-bar {
+  -webkit-app-region: no-drag;
 }
 
 /* === Tab Bar === */
@@ -93,6 +130,7 @@ html, body, #root {
   display: flex;
   gap: 2px;
   padding: 0 8px 8px;
+  -webkit-app-region: no-drag;
 }
 
 .tab-btn {
@@ -109,15 +147,16 @@ html, body, #root {
   cursor: pointer;
   transition: all 0.15s;
   font-size: 12px;
+  -webkit-app-region: no-drag;
 }
 .tab-btn:hover {
   background: rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.8);
 }
 .tab-btn.active {
-  background: rgba(124, 106, 247, 0.15);
-  border-color: rgba(124, 106, 247, 0.3);
-  color: #c4b5fd;
+  background: var(--brand-glow);
+  border-color: var(--brand-border);
+  color: var(--brand-light);
 }
 .tab-icon {
   font-size: 14px;
@@ -130,32 +169,33 @@ html, body, #root {
 /* === Recording Dot === */
 .recording-dot {
   display: inline-block;
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: #ef4444;
+  background: #f87171;
   animation: pulse 1.5s infinite;
+  box-shadow: 0 0 6px rgba(248, 113, 113, 0.6);
 }
 
 .watch-dot {
   display: inline-block;
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: #7c6af7;
+  background: var(--brand-primary);
   animation: pulse 2s infinite;
-  margin-left: 4px;
+  box-shadow: 0 0 6px var(--brand-glow);
 }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  50% { opacity: 0.35; }
 }
 
 .config-warning {
-  font-size: 12px;
-  color: #f59e0b;
-  font-weight: bold;
+  font-size: 11px;
+  color: #fbbf24;
+  font-weight: 700;
 }
 
 /* === Knowledge Base Selector === */
@@ -182,7 +222,7 @@ html, body, #root {
 
 .kb-item input[type="radio"] {
   margin-top: 3px;
-  accent-color: #7c6af7;
+  accent-color: var(--brand-primary);
   flex-shrink: 0;
 }
 
@@ -298,6 +338,7 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   height: 100%;
+  gap: 8px;
 }
 .transcript-list {
   flex: 1;
@@ -305,26 +346,29 @@ html, body, #root {
   max-height: 440px;
 }
 .transcript-entry {
-  padding: 6px 8px;
+  padding: 5px 8px;
   border-radius: 6px;
-  margin-bottom: 4px;
-  font-size: 12px;
+  margin-bottom: 3px;
+  font-size: 12.5px;
+  line-height: 1.5;
 }
 .transcript-entry.final {
   background: rgba(255, 255, 255, 0.03);
+  border-left: 2px solid rgba(124, 106, 247, 0.3);
 }
 .transcript-entry.interim {
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.35);
   font-style: italic;
+  border-left: 2px solid rgba(255, 255, 255, 0.08);
 }
 .transcript-time {
   font-size: 10px;
-  color: rgba(124, 106, 247, 0.6);
+  color: rgba(124, 106, 247, 0.55);
   margin-right: 6px;
   font-variant-numeric: tabular-nums;
 }
 .transcript-text {
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.88);
 }
 
 /* === AI Panel === */
@@ -494,7 +538,7 @@ html, body, #root {
 .settings-panel {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 .config-banner {
   padding: 8px 12px;
@@ -504,52 +548,75 @@ html, body, #root {
   color: #fbbf24;
   font-size: 12px;
 }
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 .settings-section h4 {
-  font-size: 11px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.38);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 6px;
+  letter-spacing: 0.8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 .setting-row {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  margin-bottom: 8px;
+  gap: 4px;
+  margin-bottom: 4px;
 }
-.setting-row > span {
+.setting-row > span,
+.setting-row > label {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.65);
 }
 .setting-row input[type="text"],
-.setting-row input[type="password"] {
+.setting-row input[type="password"],
+.settings-input {
   width: 100%;
-  padding: 6px 10px;
+  padding: 7px 10px;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 7px;
   color: #fff;
   font-size: 12px;
   outline: none;
+  transition: border-color 0.15s;
 }
-.setting-row input:focus {
-  border-color: rgba(124, 106, 247, 0.4);
+.setting-row input[type="text"]:focus,
+.setting-row input[type="password"]:focus,
+.settings-input:focus {
+  border-color: rgba(124, 106, 247, 0.5);
+  background: rgba(255, 255, 255, 0.07);
 }
-.setting-row input::placeholder {
-  color: rgba(255, 255, 255, 0.25);
+.setting-row input::placeholder,
+.settings-input::placeholder {
+  color: rgba(255, 255, 255, 0.22);
 }
 .setting-row input[type="range"] {
   width: 100%;
-  accent-color: #7c6af7;
+  accent-color: var(--brand-primary);
 }
 .setting-row.checkbox {
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.12s;
 }
-.setting-row.checkbox input[type="checkbox"] {
-  accent-color: #7c6af7;
+.setting-row.checkbox:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.setting-row.checkbox input[type="checkbox"],
+.setting-row.checkbox input[type="radio"] {
+  accent-color: var(--brand-primary);
+  margin-top: 2px;
+  flex-shrink: 0;
 }
 .opacity-value {
   font-size: 11px;
@@ -560,23 +627,28 @@ html, body, #root {
 .hotkey-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 .hotkey-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 0;
+  padding: 5px 8px;
+  border-radius: 6px;
+  transition: background 0.12s;
+}
+.hotkey-item:hover {
+  background: rgba(255, 255, 255, 0.04);
 }
 .hotkey-item span {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.6);
 }
 .hotkey-item code {
-  font-size: 11px;
-  padding: 2px 6px;
+  font-size: 10.5px;
+  padding: 2px 7px;
   background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 4px;
   color: rgba(255, 255, 255, 0.5);
   font-family: 'SF Mono', 'Consolas', monospace;
@@ -584,7 +656,9 @@ html, body, #root {
 .save-settings-btn {
   width: 100%;
   justify-content: center;
-  padding: 8px;
+  padding: 9px;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 /* === Empty State === */
@@ -737,7 +811,7 @@ html, body, #root {
 .kb-upload-btn {
   width: 100%;
   justify-content: center;
-  background: rgba(124, 106, 247, 0.15);
+  background: var(--brand-glow);
   border-color: rgba(124, 106, 247, 0.3);
 }
 

@@ -11,13 +11,11 @@ export function applyExcludeFromCapture(win: BrowserWindow): boolean {
     const SetWindowDisplayAffinity = lib.func(
       'SetWindowDisplayAffinity',
       'bool',
-      ['int', 'uint32']
+      ['uint32', 'uint32']
     )
     const buf = win.getNativeWindowHandle()
-    const hwnd =
-      buf.byteLength === 8
-        ? Number(buf.readBigUInt64LE())
-        : buf.readUInt32LE()
+    // HWNDs are 32-bit values even on 64-bit Windows
+    const hwnd = buf.readUInt32LE(0)
     const result = SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE)
     lib.unload()
     return result

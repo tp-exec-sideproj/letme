@@ -2,93 +2,192 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  -webkit-app-region: no-drag;
 }
 
 body {
   background: transparent;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   overflow: hidden;
+  height: 100vh;
+  -webkit-app-region: no-drag;
 }
 
-.answer-card {
-  background: rgba(10, 10, 20, 0.92);
+/* ── Panel shell ──────────────────────────────────────────────── */
+.session-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: rgba(9, 9, 18, 0.95);
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(124, 106, 247, 0.3);
+  box-shadow: 0 12px 50px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(124, 106, 247, 0.08), 0 0 30px rgba(124,106,247,0.08);
   overflow: hidden;
-  animation: slideDown 0.2s ease-out;
+  animation: fadeIn 0.18s ease-out;
 }
 
-.answer-card.quiz {
-  border-color: rgba(251, 191, 36, 0.4);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(251, 191, 36, 0.15);
-}
-
-.answer-card.interview {
-  border-color: rgba(124, 106, 247, 0.4);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(124, 106, 247, 0.15);
-}
-
-.answer-header {
+/* ── Draggable header ─────────────────────────────────────────── */
+.session-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px 6px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 8px 12px 7px;
+  background: linear-gradient(180deg, rgba(124, 106, 247, 0.12) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(124, 106, 247, 0.2);
+  flex-shrink: 0;
+  cursor: grab;
+  min-height: 38px;
 }
 
-.quiz .answer-header {
-  background: rgba(251, 191, 36, 0.1);
+.drag-region {
+  -webkit-app-region: drag;
 }
 
-.interview .answer-header {
-  background: rgba(124, 106, 247, 0.1);
+.no-drag {
+  -webkit-app-region: no-drag;
 }
 
-.answer-label {
-  font-size: 11px;
+.session-brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  pointer-events: none;
+}
+
+.session-title {
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  opacity: 0.85;
+  letter-spacing: 0.3px;
+  background: linear-gradient(135deg, #c4b5fd 0%, #7c6af7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.quiz .answer-label { color: #fbbf24; }
-.interview .answer-label { color: #a78bfa; }
+.session-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-.answer-close {
+.session-count {
+  font-size: 10px;
+  color: rgba(167, 139, 250, 0.5);
+  letter-spacing: 0.5px;
+}
+
+.session-clear {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.45);
-  font-size: 14px;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 13px;
   cursor: pointer;
   padding: 0 2px;
   line-height: 1;
+  transition: color 0.15s;
 }
+.session-clear:hover { color: rgba(255, 107, 107, 0.8); }
 
-.answer-close:hover {
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.answer-body {
-  padding: 10px 12px 12px;
-  max-height: 360px;
+/* ── Scrollable body ──────────────────────────────────────────── */
+.session-body {
+  flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scroll-behavior: smooth;
 }
 
-.answer-text {
+.session-body::-webkit-scrollbar { width: 4px; }
+.session-body::-webkit-scrollbar-track { background: transparent; }
+.session-body::-webkit-scrollbar-thumb { background: rgba(124, 106, 247, 0.3); border-radius: 2px; }
+
+.session-empty {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.2);
+  text-align: center;
+  padding: 32px 0;
+}
+
+/* ── Q&A Block ────────────────────────────────────────────────── */
+.qa-block {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.qa-block.streaming {
+  border-color: rgba(124, 106, 247, 0.4);
+  box-shadow: 0 0 0 1px rgba(124, 106, 247, 0.1);
+}
+
+.qa-block.done {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Question row — dimmed, smaller */
+.qa-question-text {
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.38);
+  font-weight: 500;
+  padding: 7px 10px 5px;
+  line-height: 1.4;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.qa-question-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(251, 191, 36, 0.6);
+  padding: 6px 10px 4px;
+  background: rgba(251, 191, 36, 0.06);
+}
+
+.qa-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Answer row — bright, prominent */
+.qa-answer-text {
   font-size: 12.5px;
-  line-height: 1.65;
   color: rgba(255, 255, 255, 0.92);
+  line-height: 1.65;
+  padding: 8px 10px 9px;
   white-space: pre-wrap;
   word-break: break-word;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
+.qa-block.streaming .qa-answer-text {
+  color: #c4b5fd;
+}
+
+.qa-block.quiz-block .qa-answer-text {
+  color: #fcd34d;
+}
+
+/* Streaming cursor */
+.qa-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 13px;
+  background: #a78bfa;
+  margin-left: 1px;
+  vertical-align: middle;
+  animation: blink 0.55s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
