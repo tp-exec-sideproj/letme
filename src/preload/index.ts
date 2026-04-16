@@ -1,6 +1,18 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
 contextBridge.exposeInMainWorld('api', {
+  // Auth
+  auth: {
+    getSession: () => ipcRenderer.invoke('auth:get-session'),
+    login: () => ipcRenderer.invoke('auth:login'),
+    logout: () => ipcRenderer.invoke('auth:logout'),
+    onSignedOut: (cb: () => void) => {
+      const handler = () => cb()
+      ipcRenderer.on('auth:signed-out', handler)
+      return () => { ipcRenderer.removeListener('auth:signed-out', handler) }
+    },
+  },
+
   // Speech
   startSpeech: () => ipcRenderer.invoke('start-speech'),
   stopSpeech: () => ipcRenderer.invoke('stop-speech'),

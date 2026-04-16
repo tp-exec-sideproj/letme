@@ -47,7 +47,20 @@ export interface WatchEvent {
   error?: string
 }
 
+export interface AuthUser {
+  email: string
+  name: string
+  picture?: string
+}
+
 export interface LetMeAPI {
+  auth: {
+    getSession: () => Promise<AuthUser | null>
+    login: () => Promise<AuthUser>
+    logout: () => Promise<void>
+    onSignedOut: (cb: () => void) => () => void
+  }
+
   startSpeech: () => Promise<void>
   stopSpeech: () => Promise<void>
 

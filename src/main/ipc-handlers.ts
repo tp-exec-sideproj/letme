@@ -12,6 +12,8 @@ import { startScreenWatch, stopScreenWatch, isWatching } from './screen-watcher'
 import { getKnowledgeBase, KNOWLEDGE_BASES } from './knowledge-base'
 import { buildKBFromFile, buildKBFromURL } from './kb-builder'
 import type { WatchEvent } from './screen-watcher'
+import { startGoogleOAuth, refreshGoogleToken } from './google-auth'
+import { saveSession, loadSession, clearSession, isTokenExpired } from './auth-store'
 
 function sendToRenderer(channel: string, ...args: any[]): void {
   const win = getOverlayWindow()
@@ -21,6 +23,54 @@ function sendToRenderer(channel: string, ...args: any[]): void {
 }
 
 export function registerIPCHandlers(): void {
+  // ── Auth handlers ───────────────────────────────────────────────────────────
+  ipcMain.handle('auth:get-session', async () => {
+    const session = loadSession()
+    if (!session) return null
+
+    if (isTokenExpired(session)) {
+      if (session.refreshToken) {
+        try {
+          const refreshed = await refreshGoogleToken(session.refreshToken)
+          session.accessToken = refreshed.accessToken
+          session.expiresAt = refreshed.expiresAt
+          saveSession(session)
+        } catch {
+          clearSession()
+          return null
+        }
+      } else {
+        clearSession()
+        return null
+      }
+    }
+
+    return { email: session.email, name: session.name, picture: session.picture }
+  })
+
+  ipcMain.handle('auth:login', async () => {
+    const result = await startGoogleOAuth()
+    const session = {
+      userId: result.user.id,
+      email: result.user.email,
+      name: result.user.name,
+      picture: result.user.picture,
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+      expiresAt: result.expiresAt,
+    }
+    saveSession(session)
+    return { email: session.email, name: session.name, picture: session.picture }
+  })
+
+  ipcMain.handle('auth:logout', async () => {
+    clearSession()
+    const win = getOverlayWindow()
+    if (win && !win.isDestroyed()) {
+      win.webContents.send('auth:signed-out')
+    }
+  })
+
   // ── Session state ────────────────────────────────────────────────────────────
   let autoAnswerTimer: ReturnType<typeof setTimeout> | null = null
   let pendingTranscript = ''

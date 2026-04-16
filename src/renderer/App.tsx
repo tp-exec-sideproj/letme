@@ -3,6 +3,7 @@ import type { PanelTab, TranscriptEntry, WatchEvent } from './types'
 import { useSettings } from './hooks/useSettings'
 import { useAudio } from './hooks/useAudio'
 import Overlay from './components/Overlay'
+import AuthGate from './components/AuthGate'
 
 export default function App() {
   const { settings, loading, updateSettings, isConfigured } = useSettings()
@@ -231,6 +232,7 @@ export default function App() {
   }
 
   return (
+    <AuthGate>
     <Overlay
       activeTab={activeTab}
       setActiveTab={setActiveTab}
@@ -263,5 +265,6 @@ export default function App() {
       updateInfo={updateInfo}
       onInstallUpdate={() => window.api.installUpdate()}
     />
+    </AuthGate>
   )
 }

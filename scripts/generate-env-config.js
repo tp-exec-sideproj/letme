@@ -45,6 +45,8 @@ export const AI_MODEL = ${JSON.stringify(env.AI_MODEL || 'gpt-4o')}
 export const AZURE_SPEECH_KEY = ${JSON.stringify(env.AZURE_SPEECH_KEY || '')}
 export const AZURE_SPEECH_REGION = ${JSON.stringify(env.AZURE_SPEECH_REGION || 'southeastasia')}
 export const BING_SEARCH_KEY = ${JSON.stringify(env.BING_SEARCH_KEY || '')}
+export const GOOGLE_CLIENT_ID = ${JSON.stringify(env.GOOGLE_CLIENT_ID || '')}
+export const GOOGLE_CLIENT_SECRET = ${JSON.stringify(env.GOOGLE_CLIENT_SECRET || '')}
 `
 
 fs.writeFileSync(outPath, content, 'utf-8')

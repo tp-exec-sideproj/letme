@@ -32,7 +32,19 @@ export function createOverlayWindow(): BrowserWindow {
       nodeIntegration: false,
       contextIsolation: true,
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: true
+      sandbox: true,
+      webSecurity: true,
+    }
+  })
+
+  // Prevent navigation — overlay should be static
+  win.webContents.on('will-navigate', (event, url) => {
+    const isDev = process.env.NODE_ENV === 'development'
+    const isAllowed = isDev
+      ? url.startsWith('http://localhost:')
+      : url.startsWith('file://')
+    if (!isAllowed) {
+      event.preventDefault()
     }
   })
 
